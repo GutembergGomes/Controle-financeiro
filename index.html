@@ -41,13 +41,14 @@
                     "description": "Descrição curta e clara da transação",
                     "amount": 0.00 (número positivo, float),
                     "type": "expense" ou "income" (baseado no contexto, negativo é expense),
-                    "date": "YYYY-MM-DD" (se não tiver ano, assuma o ano atual ${new Date().getFullYear()})
+                    "date": "YYYY-MM-DD" (se não tiver data explícita, use a data de hoje: ${new Date().toISOString().split('T')[0]})
                 }
 
                 Regras:
                 1. Ignore saldos iniciais/finais, cabeçalhos e lixo de OCR.
-                2. Se houver parcelas (ex: 01/10), adicione na descrição.
+                2. Se houver parcelas (ex: 01/10 ou 20X), adicione na descrição.
                 3. Converta valores para formato numérico (float).
+                4. SE NÃO TIVER DATA NA LINHA, USE A DATA DE HOJE.
                 
                 Texto para análise:
                 ${text}
@@ -1564,30 +1565,39 @@
                 
                 lines.forEach(line => {
                     // Ignora linhas muito curtas
-                    if (line.length < 10) return;
+                    if (line.length < 5) return; // Relaxado de 10 para 5
 
                     // Busca data
                     const dateMatch = line.match(this.patterns.date);
                     // Busca valor
                     const moneyMatch = line.match(this.patterns.money) || line.match(this.patterns.moneyUS);
 
-                    if (dateMatch && moneyMatch) {
+                    if (moneyMatch) { // Data agora é opcional
                         // Tenta extrair a descrição (texto que não é data nem valor)
                         let description = line
-                            .replace(this.patterns.date, '')
                             .replace(this.patterns.money, '')
                             .replace(this.patterns.moneyUS, '')
                             .trim()
                             .replace(/[^\w\s\u00C0-\u00FF]/g, '') // Remove caracteres especiais
                             .replace(/\s+/g, ' '); // Remove espaços duplos
+                        
+                        if (dateMatch) {
+                            description = description.replace(this.patterns.date, '').trim();
+                        }
 
-                        if (description.length > 3) {
+                        if (description.length > 2) { // Relaxado de 3 para 2
                             // Formata data para YYYY-MM-DD
-                            const dateParts = dateMatch[0].split(/[\/\-\.]/);
-                            // Assume formato DD/MM/YYYY
-                            let year = dateParts[2];
-                            if (year.length === 2) year = '20' + year;
-                            const formattedDate = `${year}-${dateParts[1].padStart(2,'0')}-${dateParts[0].padStart(2,'0')}`;
+                            let formattedDate;
+                            if (dateMatch) {
+                                const dateParts = dateMatch[0].split(/[\/\-\.]/);
+                                // Assume formato DD/MM/YYYY
+                                let year = dateParts[2];
+                                if (year.length === 2) year = '20' + year;
+                                formattedDate = `${year}-${dateParts[1].padStart(2,'0')}-${dateParts[0].padStart(2,'0')}`;
+                            } else {
+                                // Se não tiver data, usa hoje
+                                formattedDate = new Date().toISOString().split('T')[0];
+                            }
 
                             // Formata valor
                             let amountStr = moneyMatch[0].replace('R$', '').replace('$', '').trim();
@@ -1601,11 +1611,13 @@
                             }
 
                             // Determina tipo (se tiver sinal de menos é despesa)
-                            const type = line.includes('-') || line.toLowerCase().includes('debito') || line.toLowerCase().includes('pagamento') ? 'expense' : 'income';
+                            // Para listas simples sem sinal, assume despesa se tiver "Parcela" ou similar, ou Income padrão?
+                            // Melhor assumir Expense por padrão para listas de compras/dívidas
+                            const type = 'expense'; // Default safe assumption for import lists usually
 
                             transactions.push({
                                 id: Date.now() + Math.random(),
-                                description: description || 'Transação Importada',
+                                description: description || 'Item Importado',
                                 amount: Math.abs(amount),
                                 type: type,
                                 category: 'Outros', // Categoria padrão
