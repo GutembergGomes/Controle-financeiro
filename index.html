@@ -2566,7 +2566,27 @@
         function toggleTransactionStatus(id) {
             const transaction = appData.transactions.find(t => t.id === id);
             if (transaction) {
-                transaction.status = transaction.status === 'pending' ? 'paid' : 'pending';
+                const oldStatus = transaction.status;
+                const newStatus = oldStatus === 'pending' ? 'paid' : 'pending';
+                
+                transaction.status = newStatus;
+
+                // Atualizar Dívida Vinculada
+                if (transaction.debtId) {
+                    const debt = appData.debts.find(d => d.id === transaction.debtId);
+                    if (debt) {
+                        if (newStatus === 'paid' && oldStatus === 'pending') {
+                            // Marcar como pago: incrementa parcela e valor
+                            debt.paidInstallments = Math.min((debt.paidInstallments || 0) + 1, debt.totalInstallments);
+                            debt.paidAmount = Math.min((debt.paidAmount || 0) + transaction.amount, debt.totalAmount);
+                        } else if (newStatus === 'pending' && oldStatus === 'paid') {
+                            // Reverter: decrementa parcela e valor
+                            debt.paidInstallments = Math.max((debt.paidInstallments || 0) - 1, 0);
+                            debt.paidAmount = Math.max((debt.paidAmount || 0) - transaction.amount, 0);
+                        }
+                    }
+                }
+
                 saveData();
                 updateAllDisplays();
                 updateCharts();
