@@ -1989,6 +1989,18 @@
                 }
             }
 
+            async clearFromFirebase(userId) {
+                if (!isFirebaseInitialized || !db) return;
+                try {
+                    await db.collection('users').doc(userId).delete();
+                    console.log("Dados removidos do Firebase");
+                    showNotification("Dados removidos da nuvem!", "success");
+                } catch (error) {
+                    console.error("Erro ao remover do Firebase:", error);
+                    showNotification("Erro ao limpar dados da nuvem", "error");
+                }
+            }
+
 
             checkLocalStorage() {
                 try {
@@ -4334,9 +4346,15 @@
             reader.readAsText(file);
         }
 
-        function clearAllData() {
+        async function clearAllData() {
             if (confirm('Tem certeza que deseja limpar TODOS os dados? Esta ação não pode ser desfeita!')) {
-                if (confirm('ÚLTIMA CONFIRMAÇÃO: Todos os dados serão perdidos permanentemente!')) {
+                if (confirm('ÚLTIMA CONFIRMAÇÃO: Todos os dados serão perdidos permanentemente (Local e Nuvem)!')) {
+                    
+                    if (currentUser && isFirebaseInitialized) {
+                        showNotification('Removendo dados da nuvem...', 'info');
+                        await dataManager.clearFromFirebase(currentUser.uid);
+                    }
+
                     dataManager.clear();
                     location.reload();
                 }
