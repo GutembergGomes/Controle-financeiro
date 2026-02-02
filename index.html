@@ -258,7 +258,10 @@
                             <div>
                                 <p class="text-sm opacity-90 font-medium">Despesas do Mês</p>
                                 <p id="monthlyExpensesDash" class="text-3xl font-bold mt-1">R$ 0,00</p>
-                                <p id="expenseChange" class="text-xs opacity-75 mt-2">vs. mês anterior</p>
+                                <div class="flex flex-col">
+                                    <p id="expenseChange" class="text-xs opacity-75 mt-2">vs. mês anterior</p>
+                                    <p id="expenseRatio" class="text-xs font-bold mt-1 bg-black/20 inline-block px-2 py-0.5 rounded-lg w-fit">0% da Receita</p>
+                                </div>
                             </div>
                             <div class="bg-white/20 p-3 rounded-xl">
                                 <i class="fas fa-arrow-trend-down text-2xl"></i>
@@ -411,6 +414,19 @@
                     <button onclick="openTransactionModal('expense')" class="bg-gradient-to-r from-danger to-red-600 hover:from-danger/90 hover:to-red-600/90 text-white px-6 py-3 rounded-xl font-semibold shadow-lg transition-all duration-300 transform hover:scale-105">
                         <i class="fas fa-minus mr-2"></i>Nova Despesa
                     </button>
+                </div>
+            </div>
+
+            <!-- Financial Suggestion -->
+            <div id="financialSuggestion" class="hidden mb-8 p-4 rounded-2xl border-l-4 shadow-md transition-all duration-300">
+                <div class="flex items-start">
+                    <div class="p-2 rounded-full mr-4 bg-white/20">
+                        <i id="suggestionIcon" class="fas fa-lightbulb text-xl"></i>
+                    </div>
+                    <div>
+                        <h4 id="suggestionTitle" class="font-bold text-lg mb-1">Análise Financeira</h4>
+                        <p id="suggestionText" class="text-sm opacity-90"></p>
+                    </div>
                 </div>
             </div>
 
@@ -902,6 +918,38 @@
         </div>
     </div>
 
+    <!-- Asset Details Modal with Chart -->
+    <div id="assetDetailModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center modal-overlay">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl mx-4 shadow-2xl transform transition-all animate-zoom-in">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 id="assetDetailTitle" class="text-2xl font-bold text-gray-800 dark:text-white">Detalhes do Ativo</h2>
+                        <p id="assetDetailSubtitle" class="text-sm text-gray-500 dark:text-gray-400">Histórico de Preços</p>
+                    </div>
+                    <button onclick="closeAssetDetailModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <div class="mb-6">
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="assetDetailChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3">
+                    <button onclick="closeAssetDetailModal()" class="px-6 py-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors font-medium">
+                        Fechar
+                    </button>
+                    <button class="px-6 py-2 rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors shadow-lg font-medium flex items-center">
+                        <i class="fas fa-plus-circle mr-2"></i> Adicionar à Carteira
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Transaction Modal -->
     <div id="transactionModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 modal-overlay">
         <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md animate-bounce-in shadow-2xl border border-gray-200 dark:border-gray-700">
@@ -942,6 +990,16 @@
                     </label>
                     <input type="date" id="transactionDate" required 
                            class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <i class="fas fa-check-circle mr-1 text-success"></i>Status
+                    </label>
+                    <select id="transactionStatus" required 
+                            class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                        <option value="paid">Pago / Recebido</option>
+                        <option value="pending">Pendente</option>
+                    </select>
                 </div>
                 <div class="flex gap-3 pt-4">
                     <button type="submit" class="flex-1 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg">
@@ -1545,6 +1603,7 @@
             const description = document.getElementById('transactionDescription').value.trim();
             const category = document.getElementById('transactionCategory').value;
             const date = document.getElementById('transactionDate').value;
+            const status = document.getElementById('transactionStatus').value;
 
             if (amount <= 0) {
                 showNotification('O valor deve ser maior que zero!', 'error');
@@ -1557,7 +1616,8 @@
                 amount: amount,
                 description: description,
                 category: category,
-                date: date
+                date: date,
+                status: status
             };
 
             appData.transactions.unshift(transaction);
@@ -1578,6 +1638,17 @@
                 updateAllDisplays();
                 updateCharts();
                 showNotification('Transação removida com sucesso!', 'success');
+            }
+        }
+
+        function toggleTransactionStatus(id) {
+            const transaction = appData.transactions.find(t => t.id === id);
+            if (transaction) {
+                transaction.status = transaction.status === 'pending' ? 'paid' : 'pending';
+                saveData();
+                updateAllDisplays();
+                updateCharts();
+                showNotification(`Transação marcada como ${transaction.status === 'pending' ? 'pendente' : 'paga'}!`, 'success');
             }
         }
 
@@ -1789,22 +1860,23 @@
             const lastMonth = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 7);
             
             const monthlyIncome = appData.transactions
-                .filter(t => t.type === 'income' && t.date.startsWith(currentMonth))
+                .filter(t => t.type === 'income' && t.date.startsWith(currentMonth) && t.status !== 'pending')
                 .reduce((sum, t) => sum + t.amount, 0);
                 
             const monthlyExpenses = appData.transactions
-                .filter(t => t.type === 'expense' && t.date.startsWith(currentMonth))
+                .filter(t => t.type === 'expense' && t.date.startsWith(currentMonth) && t.status !== 'pending')
                 .reduce((sum, t) => sum + t.amount, 0);
 
             const lastMonthIncome = appData.transactions
-                .filter(t => t.type === 'income' && t.date.startsWith(lastMonth))
+                .filter(t => t.type === 'income' && t.date.startsWith(lastMonth) && t.status !== 'pending')
                 .reduce((sum, t) => sum + t.amount, 0);
                 
             const lastMonthExpenses = appData.transactions
-                .filter(t => t.type === 'expense' && t.date.startsWith(lastMonth))
+                .filter(t => t.type === 'expense' && t.date.startsWith(lastMonth) && t.status !== 'pending')
                 .reduce((sum, t) => sum + t.amount, 0);
                 
             const totalBalance = appData.transactions
+                .filter(t => t.status !== 'pending')
                 .reduce((sum, t) => sum + (t.type === 'income' ? t.amount : -t.amount), 0);
                 
             const monthlySavings = monthlyIncome - monthlyExpenses;
@@ -1821,12 +1893,84 @@
             document.getElementById('incomeChange').textContent = `${incomeChange >= 0 ? '+' : ''}${incomeChange.toFixed(1)}%`;
             document.getElementById('expenseChange').textContent = `${expenseChange >= 0 ? '+' : ''}${expenseChange.toFixed(1)}%`;
             document.getElementById('savingsRate').textContent = `${savingsRate.toFixed(1)}%`;
+
+            // Expense Ratio
+            const expenseRatio = monthlyIncome > 0 ? (monthlyExpenses / monthlyIncome * 100) : 0;
+            const expenseRatioEl = document.getElementById('expenseRatio');
+            if (expenseRatioEl) {
+                expenseRatioEl.textContent = `${expenseRatio.toFixed(1)}% da Receita`;
+                // Color coding based on ratio
+                expenseRatioEl.className = `text-xs font-bold mt-1 inline-block px-2 py-0.5 rounded-lg w-fit ${
+                    expenseRatio > 90 ? 'bg-red-500/30 text-white' : 
+                    expenseRatio > 70 ? 'bg-orange-500/30 text-white' : 
+                    'bg-green-500/30 text-white'
+                }`;
+            }
+
+            updateFinancialSuggestion(monthlyIncome, monthlyExpenses, totalBalance);
+        }
+
+        function updateFinancialSuggestion(income, expenses, balance) {
+            const suggestionEl = document.getElementById('financialSuggestion');
+            const iconEl = document.getElementById('suggestionIcon');
+            const titleEl = document.getElementById('suggestionTitle');
+            const textEl = document.getElementById('suggestionText');
+            
+            if (!suggestionEl) return;
+
+            let type = 'success';
+            let title = '';
+            let message = '';
+            let icon = '';
+
+            const expenseRatio = income > 0 ? (expenses / income * 100) : 0;
+
+            if (balance < 0) {
+                type = 'danger';
+                title = 'Atenção: Saldo Negativo';
+                message = 'Seu saldo total está negativo. Priorize o pagamento de dívidas e evite novos gastos supérfluos até regularizar sua situação.';
+                icon = 'fa-exclamation-triangle';
+            } else if (expenseRatio > 90) {
+                type = 'danger';
+                title = 'Alerta de Gastos Excessivos';
+                message = `Seus gastos representam ${expenseRatio.toFixed(1)}% da sua renda. Isso é muito arriscado. Tente cortar gastos não essenciais imediatamente.`;
+                icon = 'fa-fire';
+            } else if (expenseRatio > 70) {
+                type = 'warning';
+                title = 'Cuidado com o Orçamento';
+                message = `Seus gastos estão em ${expenseRatio.toFixed(1)}% da renda. O ideal é manter abaixo de 70% para ter margem de segurança e investir.`;
+                icon = 'fa-bell';
+            } else if (expenseRatio > 50) {
+                type = 'info';
+                title = 'Saúde Financeira Estável';
+                message = `Seus gastos estão controlados (${expenseRatio.toFixed(1)}%). Considere aumentar seus investimentos para acelerar seus objetivos.`;
+                icon = 'fa-chart-line';
+            } else {
+                type = 'success';
+                title = 'Excelente Gestão Financeira!';
+                message = `Parabéns! Você gasta apenas ${expenseRatio.toFixed(1)}% do que ganha. Aproveite essa folga para maximizar seus investimentos.`;
+                icon = 'fa-trophy';
+            }
+
+            // Update UI
+            suggestionEl.className = `mb-8 p-4 rounded-2xl border-l-4 shadow-md transition-all duration-300 ${
+                type === 'danger' ? 'bg-red-100 border-red-500 text-red-800 dark:bg-red-900/20 dark:text-red-200' :
+                type === 'warning' ? 'bg-orange-100 border-orange-500 text-orange-800 dark:bg-orange-900/20 dark:text-orange-200' :
+                type === 'info' ? 'bg-blue-100 border-blue-500 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200' :
+                'bg-green-100 border-green-500 text-green-800 dark:bg-green-900/20 dark:text-green-200'
+            }`;
+
+            iconEl.className = `fas ${icon} text-xl`;
+            titleEl.textContent = title;
+            textEl.textContent = message;
+            
+            suggestionEl.classList.remove('hidden');
         }
 
         function updateTransactionStats() {
             const totalTransactions = appData.transactions.length;
-            const maxIncome = Math.max(...appData.transactions.filter(t => t.type === 'income').map(t => t.amount), 0);
-            const maxExpense = Math.max(...appData.transactions.filter(t => t.type === 'expense').map(t => t.amount), 0);
+            const maxIncome = Math.max(...appData.transactions.filter(t => t.type === 'income' && t.status !== 'pending').map(t => t.amount), 0);
+            const maxExpense = Math.max(...appData.transactions.filter(t => t.type === 'expense' && t.status !== 'pending').map(t => t.amount), 0);
 
             document.getElementById('totalTransactions').textContent = totalTransactions;
             document.getElementById('maxIncome').textContent = formatCurrency(maxIncome);
@@ -1844,7 +1988,7 @@
                 .filter(b => b.month === currentMonth)
                 .reduce((sum, b) => {
                     const spent = appData.transactions
-                        .filter(t => t.type === 'expense' && t.category === b.category && t.date.startsWith(currentMonth))
+                        .filter(t => t.type === 'expense' && t.category === b.category && t.date.startsWith(currentMonth) && t.status !== 'pending')
                         .reduce((categorySum, t) => categorySum + t.amount, 0);
                     return sum + spent;
                 }, 0);
@@ -1945,6 +2089,11 @@
                             </div>
                         </div>
                         <div class="flex items-center space-x-3">
+                            <button onclick="toggleTransactionStatus(${transaction.id})" 
+                                    class="p-2 rounded-lg transition-colors ${transaction.status === 'pending' ? 'text-warning hover:bg-warning/10' : 'text-success hover:bg-success/10'}"
+                                    title="${transaction.status === 'pending' ? 'Marcar como Pago' : 'Marcar como Pendente'}">
+                                <i class="fas ${transaction.status === 'pending' ? 'fa-clock' : 'fa-check-circle'}"></i>
+                            </button>
                             <span class="font-bold text-lg ${transaction.type === 'income' ? 'text-success' : 'text-danger'}">
                                 ${transaction.type === 'income' ? '+' : '-'}${formatCurrency(transaction.amount)}
                             </span>
@@ -2782,11 +2931,11 @@
                 last6Months.push(date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }));
                 
                 const monthIncome = appData.transactions
-                    .filter(t => t.type === 'income' && t.date.startsWith(monthKey))
+                    .filter(t => t.type === 'income' && t.date.startsWith(monthKey) && t.status !== 'pending')
                     .reduce((sum, t) => sum + t.amount, 0);
                     
                 const monthExpenses = appData.transactions
-                    .filter(t => t.type === 'expense' && t.date.startsWith(monthKey))
+                    .filter(t => t.type === 'expense' && t.date.startsWith(monthKey) && t.status !== 'pending')
                     .reduce((sum, t) => sum + t.amount, 0);
                     
                 incomeData.push(monthIncome);
@@ -2805,7 +2954,7 @@
             const currentMonth = new Date().toISOString().slice(0, 7);
             const categoryTotals = {};
             appData.transactions
-                .filter(t => t.type === 'expense' && t.date.startsWith(currentMonth))
+                .filter(t => t.type === 'expense' && t.date.startsWith(currentMonth) && t.status !== 'pending')
                 .forEach(t => {
                     categoryTotals[t.category] = (categoryTotals[t.category] || 0) + t.amount;
                 });
@@ -2846,11 +2995,11 @@
                 last12Months.push(date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }));
                 
                 const monthIncome = appData.transactions
-                    .filter(t => t.type === 'income' && t.date.startsWith(monthKey))
+                    .filter(t => t.type === 'income' && t.date.startsWith(monthKey) && t.status !== 'pending')
                     .reduce((sum, t) => sum + t.amount, 0);
                     
                 const monthExpenses = appData.transactions
-                    .filter(t => t.type === 'expense' && t.date.startsWith(monthKey))
+                    .filter(t => t.type === 'expense' && t.date.startsWith(monthKey) && t.status !== 'pending')
                     .reduce((sum, t) => sum + t.amount, 0);
                     
                 incomeData.push(monthIncome);
@@ -3083,7 +3232,251 @@
             }
         }
 
-        // FUNÇÕES DE MERCADO E SUGESTÕES
+        // REAL DATA SERVICE
+        const RealDataService = {
+            cache: {},
+            
+            async getRates() {
+                try {
+                    // Tenta buscar taxas reais (Selic, CDI)
+                    const response = await fetch('https://brasilapi.com.br/api/taxas/v1');
+                    const data = await response.json();
+                    const selic = data.find(r => r.nome === 'Selic')?.valor || 11.25;
+                    const cdi = data.find(r => r.nome === 'CDI')?.valor || 11.15;
+                    return { selic, cdi };
+                } catch (e) {
+                    console.warn('Erro ao buscar taxas:', e);
+                    return { selic: 11.25, cdi: 11.15 };
+                }
+            },
+
+            async getCryptoHistory(id) {
+                try {
+                    const response = await fetch(`https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=brl&days=30`);
+                    const data = await response.json();
+                    return {
+                        prices: data.prices.map(p => p[1]),
+                        dates: data.prices.map(p => new Date(p[0]).toLocaleDateString('pt-BR'))
+                    };
+                } catch (e) {
+                    console.warn(`Erro ao buscar cripto ${id}:`, e);
+                    return null;
+                }
+            },
+
+            async getStockHistory(ticker) {
+                try {
+                    // Usando proxy para Yahoo Finance (Solução Frontend)
+                    // Nota: Proxies públicos podem ter limites ou instabilidade
+                    const proxyUrl = 'https://api.allorigins.win/raw?url=';
+                    const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}.SA?interval=1d&range=1mo`;
+                    
+                    const response = await fetch(proxyUrl + encodeURIComponent(targetUrl));
+                    const data = await response.json();
+                    
+                    if (!data.chart || !data.chart.result) return null;
+                    
+                    const result = data.chart.result[0];
+                    const quotes = result.indicators.quote[0].close;
+                    const timestamps = result.timestamp;
+                    
+                    // Filtrar nulls (dias sem pregão)
+                    const cleanData = timestamps.map((t, i) => ({
+                        date: new Date(t * 1000).toLocaleDateString('pt-BR'),
+                        price: quotes[i]
+                    })).filter(item => item.price != null);
+
+                    return {
+                        prices: cleanData.map(d => d.price),
+                        dates: cleanData.map(d => d.date),
+                        currentPrice: result.meta.regularMarketPrice
+                    };
+                } catch (e) {
+                    console.warn(`Erro ao buscar ação ${ticker}:`, e);
+                    return null;
+                }
+            },
+
+            async getStockQuote(ticker) {
+                // Versão leve apenas para cotação atual
+                try {
+                    const proxyUrl = 'https://api.allorigins.win/raw?url=';
+                    const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}.SA?interval=1d&range=1d`;
+                    const response = await fetch(proxyUrl + encodeURIComponent(targetUrl));
+                    const data = await response.json();
+                    return data.chart?.result?.[0]?.meta?.regularMarketPrice;
+                } catch (e) {
+                    return null;
+                }
+            },
+
+            // Gera curva teórica para renda fixa baseada na taxa anual
+            generateFixedIncomeCurve(annualRate, days = 30, baseValue = 1000) {
+                const dailyRate = Math.pow(1 + (annualRate / 100), 1 / 252) - 1;
+                const prices = [];
+                const dates = [];
+                let current = baseValue;
+
+                for (let i = days; i >= 0; i--) {
+                    const date = new Date();
+                    date.setDate(date.getDate() - i);
+                    if (date.getDay() !== 0 && date.getDay() !== 6) { // Dias úteis aprox
+                        prices.push(current);
+                        dates.push(date.toLocaleDateString('pt-BR'));
+                        current = current * (1 + dailyRate);
+                    }
+                }
+                return { prices, dates, currentPrice: current };
+            }
+        };
+
+        // CHART CONFIGURATION
+        let assetChartInstance = null;
+
+        async function showAssetDetails(name, ticker, type, price, risk) {
+            const modal = document.getElementById('assetDetailModal');
+            const titleEl = document.getElementById('assetDetailTitle');
+            const subtitleEl = document.getElementById('assetDetailSubtitle');
+            const canvas = document.getElementById('assetDetailChart');
+            
+            // Loading state
+            modal.classList.remove('hidden');
+            titleEl.textContent = "Carregando dados reais...";
+            subtitleEl.textContent = "Conectando às bolsas de valores...";
+            
+            // Limpar gráfico anterior
+            if (assetChartInstance) {
+                assetChartInstance.destroy();
+            }
+
+            let historyData = { prices: [], dates: [] };
+            let currentPrice = price;
+            
+            // BUSCA DE DADOS REAIS
+            try {
+                if (type.includes('Cripto')) {
+                    // Mapeamento de IDs do CoinGecko
+                    const cryptoMap = { 'BTC': 'bitcoin', 'ETH': 'ethereum', 'SOL': 'solana' };
+                    const coinId = cryptoMap[ticker] || 'bitcoin';
+                    const data = await RealDataService.getCryptoHistory(coinId);
+                    if (data) {
+                        historyData = data;
+                        currentPrice = `R$ ${data.prices[data.prices.length - 1].toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                    }
+                } 
+                else if (type.includes('Ações') || type.includes('FII')) {
+                    const data = await RealDataService.getStockHistory(ticker);
+                    if (data) {
+                        historyData = data;
+                        currentPrice = `R$ ${data.currentPrice.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                    }
+                }
+                else if (type.includes('Tesouro') || type.includes('CDB') || type.includes('LCI')) {
+                    // Renda Fixa: Curva teórica baseada no CDI/Selic atual
+                    const rates = await RealDataService.getRates();
+                    const rate = type.includes('IPCA') ? 6.0 : (type.includes('LCI') ? rates.cdi * 0.9 : rates.selic);
+                    const baseVal = parseFloat(price.replace(/[^0-9,]/g, '').replace(',', '.')) || 100;
+                    const data = RealDataService.generateFixedIncomeCurve(rate, 30, baseVal);
+                    historyData = data;
+                    // Preço de renda fixa "unitário" é simbólico no gráfico, mas mostra a curva
+                }
+                else {
+                    // Fallback para mock se não reconhecer
+                    const mock = generateMockHistoryData(price);
+                    historyData = { prices: mock.data, dates: mock.labels };
+                }
+            } catch (e) {
+                console.error("Erro ao carregar gráfico:", e);
+                const mock = generateMockHistoryData(price);
+                historyData = { prices: mock.data, dates: mock.labels };
+            }
+
+            // Atualiza UI com dados finais
+            titleEl.textContent = ticker ? `${name} (${ticker})` : name;
+            subtitleEl.textContent = `${type} • Risco ${risk} • Atualizado: ${currentPrice}`;
+
+            const ctx = canvas.getContext('2d');
+            const isDark = document.documentElement.classList.contains('dark');
+            
+            // Cor baseada na variação (primeiro vs último)
+            const startPrice = historyData.prices[0] || 0;
+            const endPrice = historyData.prices[historyData.prices.length - 1] || 0;
+            const color = endPrice >= startPrice ? '#10B981' : '#EF4444';
+            
+            assetChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: historyData.dates,
+                    datasets: [{
+                        label: 'Preço (R$)',
+                        data: historyData.prices,
+                        borderColor: color,
+                        backgroundColor: color + '20',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return 'R$ ' + context.parsed.y.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { display: false } // Ocultar datas para limpar visual, tooltip mostra
+                        },
+                        y: {
+                            grid: { color: isDark ? '#374151' : '#E5E7EB', borderDash: [5, 5] },
+                            ticks: { color: isDark ? '#9CA3AF' : '#4B5563' }
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
+            });
+        }
+
+        // MOCK GENERATOR (FALLBACK)
+        function generateMockHistoryData(basePrice, days = 30, volatility = 0.02) {
+             const data = [];
+             const labels = [];
+             let currentPrice = parseFloat(basePrice.replace('R$', '').replace('.', '').replace(',', '.').trim()) || 100;
+ 
+             for (let i = days; i >= 0; i--) {
+                 const date = new Date();
+                 date.setDate(date.getDate() - i);
+                 labels.push(date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
+                 
+                 // Random walk
+                 const change = currentPrice * volatility * (Math.random() - 0.5);
+                 currentPrice += change;
+                 data.push(currentPrice);
+             }
+             return { labels, data };
+        }
+
+        function closeAssetDetailModal() {
+            document.getElementById('assetDetailModal').classList.add('hidden');
+        }
+ 
+         // FUNÇÕES DE MERCADO E SUGESTÕES
         async function updateMarketTicker() {
             const container = document.getElementById('marketTicker');
             
@@ -3332,7 +3725,7 @@
             const items = suggestions[profile] || suggestions.moderado;
 
             container.innerHTML = items.map(item => `
-                <div class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow hover:shadow-lg transition-all transform hover:-translate-y-1 border-t-4 ${item.classes.border}">
+                <div onclick="showAssetDetails('${item.title}', '', '${item.risk}', '${item.return}', '${item.risk}')" class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow hover:shadow-lg transition-all transform hover:-translate-y-1 border-t-4 ${item.classes.border} cursor-pointer">
                     <h4 class="font-bold text-gray-800 dark:text-white mb-2 flex justify-between items-center">
                         ${item.title}
                         <span class="text-xs px-2 py-1 rounded-full ${item.classes.bgBadge} ${item.classes.textBadge} ${item.classes.bgBadgeDark} ${item.classes.textBadgeDark}">${item.risk}</span>
@@ -3377,7 +3770,7 @@
             ]
         };
 
-        function renderMarketCatalog(category) {
+        async function renderMarketCatalog(category) {
             const container = document.getElementById('marketCatalogContainer');
             const items = marketCatalog[category] || [];
             
@@ -3392,30 +3785,71 @@
                 }
             });
 
-            container.innerHTML = items.map(item => `
-                <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl border-l-4 ${item.border} hover:bg-white dark:hover:bg-gray-700 transition-all cursor-pointer group">
-                    <div class="flex justify-between items-start mb-2">
-                        <div>
-                            <h4 class="font-bold text-gray-800 dark:text-white group-hover:text-primary transition-colors">
-                                ${item.ticker ? `<span class="bg-gray-200 dark:bg-gray-600 px-2 py-0.5 rounded text-xs mr-2">${item.ticker}</span>` : ''}
-                                ${item.name}
-                            </h4>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${item.type}</p>
+            // Renderiza estado inicial (cache ou estático)
+            const renderItems = (itemList) => {
+                container.innerHTML = itemList.map((item, index) => `
+                    <div onclick="showAssetDetails('${item.name}', '${item.ticker || ''}', '${item.type}', '${item.min || item.price || '0'}', '${item.risk}')" class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl border-l-4 ${item.border} hover:bg-white dark:hover:bg-gray-700 transition-all cursor-pointer group relative overflow-hidden">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h4 class="font-bold text-gray-800 dark:text-white group-hover:text-primary transition-colors">
+                                    ${item.ticker ? `<span class="bg-gray-200 dark:bg-gray-600 px-2 py-0.5 rounded text-xs mr-2">${item.ticker}</span>` : ''}
+                                    ${item.name}
+                                </h4>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${item.type}</p>
+                            </div>
+                            <span class="text-xs font-semibold px-2 py-1 rounded-full bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 whitespace-nowrap">${item.risk}</span>
                         </div>
-                        <span class="text-xs font-semibold px-2 py-1 rounded-full bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 whitespace-nowrap">${item.risk}</span>
+                        <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-200 dark:border-gray-600">
+                            <div class="text-center">
+                                <p class="text-[10px] uppercase text-gray-500 tracking-wider">Retorno/DY</p>
+                                <p class="font-bold ${item.text} text-sm">${item.return}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[10px] uppercase text-gray-500 tracking-wider">${item.min ? 'Invest. Min.' : 'Preço Atual'}</p>
+                                <p id="price-${category}-${index}" class="font-bold text-gray-800 dark:text-white text-sm transition-colors duration-500">${item.min || item.price}</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-200 dark:border-gray-600">
-                        <div class="text-center">
-                            <p class="text-[10px] uppercase text-gray-500 tracking-wider">Retorno/DY</p>
-                            <p class="font-bold ${item.text} text-sm">${item.return}</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-[10px] uppercase text-gray-500 tracking-wider">${item.min ? 'Invest. Min.' : 'Preço Aprox.'}</p>
-                            <p class="font-bold text-gray-800 dark:text-white text-sm">${item.min || item.price}</p>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
+                `).join('');
+            };
+
+            renderItems(items);
+
+            // Atualiza preços reais em segundo plano
+            if (category === 'acoes' || category === 'fiis' || category === 'cripto') {
+                for (let i = 0; i < items.length; i++) {
+                    const item = items[i];
+                    if (item.ticker) {
+                        try {
+                            let price = null;
+                            if (category === 'cripto') {
+                                const cryptoMap = { 'BTC': 'bitcoin', 'ETH': 'ethereum', 'SOL': 'solana' };
+                                const coinId = cryptoMap[item.ticker] || 'bitcoin';
+                                const history = await RealDataService.getCryptoHistory(coinId);
+                                if (history && history.prices.length > 0) {
+                                    price = history.prices[history.prices.length - 1];
+                                }
+                            } else {
+                                price = await RealDataService.getStockQuote(item.ticker);
+                            }
+
+                            if (price) {
+                                const el = document.getElementById(`price-${category}-${i}`);
+                                if (el) {
+                                    el.innerHTML = `R$ ${price.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                                    el.classList.add('text-green-500');
+                                    setTimeout(() => el.classList.remove('text-green-500'), 1000);
+                                    
+                                    // Atualiza objeto local para persistir na navegação
+                                    item.price = `R$ ${price.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                                }
+                            }
+                        } catch (e) {
+                            console.warn(`Falha ao atualizar preço de ${item.ticker}`);
+                        }
+                    }
+                }
+            }
         }
 
         // FUNÇÕES UTILITÁRIAS
