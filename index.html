@@ -6,6 +6,33 @@
     <title>FinanceControl Pro - Versão 2.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
+
+    <script>
+        // CONFIGURAÇÃO DO FIREBASE
+        const firebaseConfig = { 
+           apiKey: "AIzaSyAefJVt69iMmI2lph_6mK52PddWpx46kk8", 
+           authDomain: "financeiro-6700e.firebaseapp.com", 
+           projectId: "financeiro-6700e", 
+           storageBucket: "financeiro-6700e.firebasestorage.app", 
+           messagingSenderId: "593654083182", 
+           appId: "1:593654083182:web:823815c022e2cf1e4ec07f", 
+           measurementId: "G-4GEEYWY60B" 
+        }; 
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const analytics = firebase.analytics();
+        
+        let currentUser = null;
+        let isFirebaseInitialized = true;
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script>
         tailwind.config = {
@@ -155,6 +182,11 @@
                     </button>
                 </nav>
                 <div class="flex items-center space-x-3">
+                    <div id="userDisplay" class="hidden"></div>
+                    <button id="authBtn" onclick="loginWithGoogle()" class="hidden md:flex items-center px-3 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors border border-white/10">
+                        <i class="fab fa-google mr-2"></i>Entrar
+                    </button>
+                    
                     <button onclick="toggleDarkMode()" class="p-2 rounded-lg hover:bg-white/20 transition-colors" title="Alternar tema">
                         <i id="themeIcon" class="fas fa-moon text-lg"></i>
                     </button>
@@ -1353,12 +1385,52 @@
     <div id="notificationContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
 
     <script>
-        // SISTEMA DE PERSISTÊNCIA ROBUSTO
+
+        // --- SISTEMA DE PERSISTÊNCIA ROBUSTO ---
         class DataManager {
             constructor() {
                 this.storageKey = 'financeControlPro';
                 this.isLocalStorageAvailable = this.checkLocalStorage();
             }
+
+            // ... Métodos existentes ...
+
+            async loadFromFirebase(userId) {
+                if (!isFirebaseInitialized || !db) return null;
+                
+                try {
+                    const doc = await db.collection('users').doc(userId).get();
+                    if (doc.exists) {
+                        const firebaseData = JSON.parse(doc.data().data);
+                        console.log("Dados recuperados do Firebase");
+                        return this.validateAndMergeData(firebaseData);
+                    }
+                    return null;
+                } catch (error) {
+                    console.error("Erro ao carregar do Firebase:", error);
+                    showNotification("Erro ao sincronizar dados da nuvem", "error");
+                    return null;
+                }
+            }
+
+            async saveToFirebase(data, userId) {
+                if (!isFirebaseInitialized || !db) return;
+
+                try {
+                    const serializedData = JSON.stringify(data);
+                    await db.collection('users').doc(userId).set({
+                        data: serializedData,
+                        lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
+                        email: currentUser.email
+                    });
+                    console.log("Dados sincronizados com Firebase");
+                    showNotification("Dados salvos na nuvem!", "success");
+                } catch (error) {
+                    console.error("Erro ao salvar no Firebase:", error);
+                    showNotification("Erro ao salvar na nuvem", "warning");
+                }
+            }
+
 
             checkLocalStorage() {
                 try {
@@ -1475,11 +1547,93 @@
         let fabOpen = false;
         let dataManager = new DataManager();
 
+        // --- FUNÇÕES DE AUTENTICAÇÃO ---
+        function loginWithGoogle() {
+            if (!isFirebaseInitialized) {
+                showNotification("Configure o Firebase no código primeiro!", "warning");
+                return;
+            }
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    showNotification("Login realizado com sucesso!", "success");
+                }).catch((error) => {
+                    console.error("Erro no login:", error);
+                    showNotification("Erro ao fazer login: " + error.message, "error");
+                });
+        }
+
+        function logout() {
+            if (!isFirebaseInitialized) return;
+            auth.signOut().then(() => {
+                showNotification("Desconectado com sucesso", "info");
+                setTimeout(() => location.reload(), 1000);
+            });
+        }
+
+        function updateAuthUI() {
+            const authBtn = document.getElementById('authBtn');
+            const userDisplay = document.getElementById('userDisplay');
+            
+            if (currentUser) {
+                if(authBtn) {
+                    authBtn.innerHTML = '<i class="fas fa-sign-out-alt mr-2"></i>Sair';
+                    authBtn.onclick = logout;
+                    authBtn.classList.add('bg-red-500/20', 'text-red-100', 'border-red-500/30');
+                    authBtn.classList.remove('bg-white/10');
+                }
+                if(userDisplay) {
+                    userDisplay.innerHTML = `
+                        <div class="flex items-center gap-2 mr-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/10">
+                            <img src="${currentUser.photoURL}" class="w-6 h-6 rounded-full">
+                            <span class="text-xs font-medium text-white max-w-[100px] truncate">${currentUser.displayName.split(' ')[0]}</span>
+                        </div>
+                    `;
+                    userDisplay.classList.remove('hidden');
+                }
+            } else {
+                if(authBtn) {
+                    authBtn.innerHTML = '<i class="fab fa-google mr-2"></i>Entrar';
+                    authBtn.onclick = loginWithGoogle;
+                    authBtn.classList.remove('bg-red-500/20', 'text-red-100', 'border-red-500/30');
+                    authBtn.classList.add('bg-white/10');
+                }
+                if(userDisplay) userDisplay.classList.add('hidden');
+            }
+        }
+
         // FUNÇÕES DE INICIALIZAÇÃO
         function initializeApp() {
             console.log('Inicializando aplicação...');
             
-            // Carregar dados
+            // Configurar Listener de Auth (Firebase)
+            if (isFirebaseInitialized) {
+                auth.onAuthStateChanged(async (user) => {
+                    currentUser = user;
+                    updateAuthUI();
+                    
+                    if (user) {
+                        showNotification(`Sincronizando dados de ${user.displayName}...`, 'info');
+                        const cloudData = await dataManager.loadFromFirebase(user.uid);
+                        if (cloudData) {
+                            appData = cloudData;
+                            updateAllDisplays();
+                            showNotification("Dados da nuvem carregados!", "success");
+                        } else {
+                            // Se é o primeiro login e tem dados locais, salva na nuvem
+                            if (appData.transactions.length > 0) {
+                                showNotification("Fazendo backup dos dados locais...", "info");
+                                saveData();
+                            }
+                        }
+                    }
+                });
+            } else {
+                // Se não tem firebase configurado, mostra botão de login desabilitado ou avisa no console
+                console.log("Modo offline ativo");
+            }
+
+            // Carregar dados locais inicialmente
             appData = dataManager.load();
             console.log('Dados carregados:', appData);
             
@@ -1559,7 +1713,14 @@
 
         // FUNÇÕES DE SALVAMENTO E CARREGAMENTO
         function saveData() {
+            // Salva localmente
             const success = dataManager.save(appData);
+            
+            // Tenta salvar no Firebase se logado
+            if (currentUser && isFirebaseInitialized) {
+                dataManager.saveToFirebase(appData, currentUser.uid);
+            }
+
             if (success) {
                 updateLastUpdateTime();
             }
@@ -3095,6 +3256,14 @@
             const isDark = document.documentElement.classList.contains('dark');
             const textColor = isDark ? '#E5E7EB' : '#374151';
             const gridColor = isDark ? '#374151' : '#E5E7EB';
+
+            // Destruir gráficos existentes antes de criar novos
+            Object.values(charts).forEach(chart => {
+                if (chart && typeof chart.destroy === 'function') {
+                    chart.destroy();
+                }
+            });
+            charts = {};
 
             Chart.defaults.font.family = "'Inter', sans-serif";
             Chart.defaults.color = textColor;
