@@ -6,6 +6,65 @@
     <title>FinanceControl Pro - Versão 2.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Import Libs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
+    </script>
+    
+    <!-- Gemini AI SDK -->
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/generative-ai": "https://esm.run/@google/generative-ai"
+        }
+      }
+    </script>
+    <script type="module">
+      import { GoogleGenerativeAI } from "@google/generative-ai";
+
+      window.processWithGemini = async function(text, apiKey) {
+        try {
+            const genAI = new GoogleGenerativeAI(apiKey);
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash"});
+
+            const prompt = `
+            Analise o seguinte texto extraído de um documento financeiro (extrato, recibo ou planilha) e extraia as transações.
+            Retorne APENAS um array JSON válido (sem markdown, sem \`\`\`).
+            
+            Formato do objeto JSON:
+            {
+                "description": "Descrição curta e clara da transação",
+                "amount": 0.00 (número positivo, float),
+                "type": "expense" ou "income" (baseado no contexto, negativo é expense),
+                "date": "YYYY-MM-DD" (se não tiver ano, assuma o ano atual ${new Date().getFullYear()})
+            }
+
+            Regras:
+            1. Ignore saldos iniciais/finais, cabeçalhos e lixo de OCR.
+            2. Se houver parcelas (ex: 01/10), adicione na descrição.
+            3. Converta valores para formato numérico (float).
+            
+            Texto para análise:
+            ${text}
+            `;
+
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            const textResponse = response.text();
+            
+            // Limpa markdown se o modelo retornar
+            const jsonStr = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+            return JSON.parse(jsonStr);
+        } catch (error) {
+            console.error("Erro Gemini:", error);
+            throw error;
+        }
+      }
+    </script>
+
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -1347,6 +1406,40 @@
             <div class="space-y-6">
                 <div>
                     <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">
+                        <i class="fas fa-file-import mr-2 text-primary"></i>Importar Dados (IA Beta)
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <button onclick="document.getElementById('importExcel').click()" 
+                                class="flex flex-col items-center justify-center p-4 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all group">
+                            <i class="fas fa-file-excel text-2xl text-green-600 mb-2 group-hover:scale-110 transition-transform"></i>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Excel / CSV</span>
+                        </button>
+                        <input type="file" id="importExcel" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleExcelImport(this)">
+
+                        <button onclick="document.getElementById('importImage').click()" 
+                                class="flex flex-col items-center justify-center p-4 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all group">
+                            <i class="fas fa-camera text-2xl text-blue-600 mb-2 group-hover:scale-110 transition-transform"></i>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Foto / Imagem</span>
+                        </button>
+                        <input type="file" id="importImage" accept="image/*" class="hidden" onchange="handleImageImport(this)">
+
+                        <button onclick="document.getElementById('importPdf').click()" 
+                                class="flex flex-col items-center justify-center p-4 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all group">
+                            <i class="fas fa-file-pdf text-2xl text-red-600 mb-2 group-hover:scale-110 transition-transform"></i>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Extrato PDF</span>
+                        </button>
+                        <input type="file" id="importPdf" accept=".pdf" class="hidden" onchange="handlePdfImport(this)">
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                        <i class="fas fa-robot mr-1"></i>
+                        A IA tentará reconhecer automaticamente datas, valores e descrições.
+                    </p>
+                </div>
+
+                <div class="border-t border-gray-200 dark:border-gray-700 my-4"></div>
+
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">
                         <i class="fas fa-sliders-h mr-2 text-accent"></i>Preferências
                     </h4>
                     <div class="space-y-3">
@@ -1365,6 +1458,18 @@
                                 <option value="en-US">MM/DD/AAAA</option>
                                 <option value="en-GB">DD/MM/AAAA</option>
                             </select>
+                        </div>
+                        
+                        <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <label class="block text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600 mb-2">
+                                <i class="fas fa-magic mr-2"></i>Gemini AI (Opcional)
+                            </label>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                Para uma importação MUITO mais precisa, cole sua API Key do Google Gemini abaixo. 
+                                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-primary hover:underline">Gerar Key Grátis</a>
+                            </p>
+                            <input type="password" id="geminiApiKey" placeholder="Cole sua API Key aqui (começa com AIza...)" 
+                                   class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
                         </div>
                     </div>
                 </div>
@@ -1386,11 +1491,231 @@
 
     <script>
 
+        // --- SISTEMA DE IMPORTAÇÃO INTELIGENTE (IA BETA) ---
+        const SmartParser = {
+            // Regex patterns para identificar dados
+            patterns: {
+                date: /(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/g,
+                money: /(?:R\$\s*)?([\d\.]+,\d{2})/g, // Formato PT-BR 1.000,00
+                moneyUS: /(?:\$\s*)?([\d,]+\.\d{2})/g // Formato US 1,000.00
+            },
+
+            // Tenta adivinhar se é uma transação válida
+            parseText: async function(text) {
+                // VERIFICA SE TEM API KEY DO GEMINI CONFIGURADA
+                const apiKey = localStorage.getItem('geminiApiKey');
+                
+                if (apiKey && window.processWithGemini) {
+                    try {
+                        showNotification('Enviando dados para análise do Gemini AI...', 'info');
+                        const geminiTransactions = await window.processWithGemini(text, apiKey);
+                        
+                        // Valida e formata retorno do Gemini
+                        return geminiTransactions.map(t => ({
+                            id: Date.now() + Math.random(),
+                            description: t.description || 'Transação Gemini',
+                            amount: parseFloat(t.amount),
+                            type: t.type === 'expense' ? 'expense' : 'income',
+                            category: 'Outros',
+                            date: t.date,
+                            status: 'paid'
+                        }));
+                    } catch (e) {
+                        console.error("Falha no Gemini, usando fallback regex", e);
+                        showNotification('Erro na IA, usando método padrão...', 'warning');
+                    }
+                }
+
+                // FALLBACK: Regex simples (código original)
+                const lines = text.split('\n');
+                const transactions = [];
+                
+                lines.forEach(line => {
+                    // Ignora linhas muito curtas
+                    if (line.length < 10) return;
+
+                    // Busca data
+                    const dateMatch = line.match(this.patterns.date);
+                    // Busca valor
+                    const moneyMatch = line.match(this.patterns.money) || line.match(this.patterns.moneyUS);
+
+                    if (dateMatch && moneyMatch) {
+                        // Tenta extrair a descrição (texto que não é data nem valor)
+                        let description = line
+                            .replace(this.patterns.date, '')
+                            .replace(this.patterns.money, '')
+                            .replace(this.patterns.moneyUS, '')
+                            .trim()
+                            .replace(/[^\w\s\u00C0-\u00FF]/g, '') // Remove caracteres especiais
+                            .replace(/\s+/g, ' '); // Remove espaços duplos
+
+                        if (description.length > 3) {
+                            // Formata data para YYYY-MM-DD
+                            const dateParts = dateMatch[0].split(/[\/\-\.]/);
+                            // Assume formato DD/MM/YYYY
+                            let year = dateParts[2];
+                            if (year.length === 2) year = '20' + year;
+                            const formattedDate = `${year}-${dateParts[1].padStart(2,'0')}-${dateParts[0].padStart(2,'0')}`;
+
+                            // Formata valor
+                            let amountStr = moneyMatch[0].replace('R$', '').replace('$', '').trim();
+                            let amount = 0;
+                            if (amountStr.includes(',')) {
+                                // PT-BR
+                                amount = parseFloat(amountStr.replace(/\./g, '').replace(',', '.'));
+                            } else {
+                                // US
+                                amount = parseFloat(amountStr.replace(/,/g, ''));
+                            }
+
+                            // Determina tipo (se tiver sinal de menos é despesa)
+                            const type = line.includes('-') || line.toLowerCase().includes('debito') || line.toLowerCase().includes('pagamento') ? 'expense' : 'income';
+
+                            transactions.push({
+                                id: Date.now() + Math.random(),
+                                description: description || 'Transação Importada',
+                                amount: Math.abs(amount),
+                                type: type,
+                                category: 'Outros', // Categoria padrão
+                                date: formattedDate,
+                                status: 'paid'
+                            });
+                        }
+                    }
+                });
+                return transactions;
+            }
+        };
+
+        // Handlers de Importação
+        function handleExcelImport(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            showNotification('Lendo arquivo Excel...', 'info');
+            const reader = new FileReader();
+            
+            reader.onload = async function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1}); // Array de arrays
+                    
+                    let textBuffer = "";
+                    jsonData.forEach(row => {
+                        textBuffer += row.join(" ") + "\n";
+                    });
+
+                    const transactions = await SmartParser.parseText(textBuffer);
+                    processImportedTransactions(transactions);
+                    
+                } catch (error) {
+                    console.error(error);
+                    showNotification('Erro ao ler Excel', 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+            input.value = ''; // Reset input
+        }
+
+        function handleImageImport(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            showNotification('Processando imagem com OCR (pode demorar)...', 'info');
+            
+            Tesseract.recognize(
+                file,
+                'por', // Português
+                { logger: m => console.log(m) }
+            ).then(async ({ data: { text } }) => {
+                console.log("Texto extraído:", text);
+                const transactions = await SmartParser.parseText(text);
+                processImportedTransactions(transactions);
+            }).catch(err => {
+                console.error(err);
+                showNotification('Erro ao processar imagem', 'error');
+            });
+            input.value = '';
+        }
+
+        async function handlePdfImport(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            showNotification('Lendo PDF...', 'info');
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+                let fullText = "";
+
+                // Lê todas as páginas
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(' ');
+                    fullText += pageText + "\n";
+                }
+
+                console.log("Texto PDF:", fullText);
+                const transactions = await SmartParser.parseText(fullText);
+                processImportedTransactions(transactions);
+
+            } catch (error) {
+                console.error(error);
+                showNotification('Erro ao ler PDF', 'error');
+            }
+            input.value = '';
+        }
+
+        function processImportedTransactions(transactions) {
+            if (transactions.length === 0) {
+                showNotification('Nenhuma transação identificada.', 'warning');
+                return;
+            }
+
+            // Filtra duplicatas (básico: mesma data, valor e descrição)
+            const newTransactions = transactions.filter(newT => {
+                return !appData.transactions.some(existingT => 
+                    existingT.date === newT.date && 
+                    existingT.amount === newT.amount &&
+                    existingT.description === newT.description
+                );
+            });
+
+            if (newTransactions.length === 0) {
+                showNotification('Todas as transações já foram importadas anteriormente.', 'info');
+                return;
+            }
+
+            // Adiciona ao appData
+            appData.transactions.push(...newTransactions);
+            saveData();
+            updateAllDisplays();
+            closeSettingsModal();
+            
+            showNotification(`${newTransactions.length} transações importadas com sucesso!`, 'success');
+            
+            // Mostra resumo visual (opcional, por enquanto só notificação)
+        }
+
         // --- SISTEMA DE PERSISTÊNCIA ROBUSTO ---
         class DataManager {
             constructor() {
                 this.storageKey = 'financeControlPro';
                 this.isLocalStorageAvailable = this.checkLocalStorage();
+                
+                // Load Gemini Key if exists
+                const geminiKey = localStorage.getItem('geminiApiKey');
+                if(geminiKey) {
+                    setTimeout(() => {
+                        const input = document.getElementById('geminiApiKey');
+                        if(input) input.value = geminiKey;
+                    }, 1000); // Delay to ensure DOM is ready
+                }
             }
 
             // ... Métodos existentes ...
@@ -1904,6 +2229,12 @@
         function showSettingsModal() {
             populateSettingsModal();
             document.getElementById('settingsModal').classList.remove('hidden');
+            
+            // Carrega API Key
+            const apiKey = localStorage.getItem('geminiApiKey');
+            if(apiKey) {
+                document.getElementById('geminiApiKey').value = apiKey;
+            }
         }
 
         function closeSettingsModal() {
