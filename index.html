@@ -627,6 +627,70 @@
                 </button>
             </div>
 
+            <!-- Market Ticker -->
+            <div class="mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">
+                        <i class="fas fa-globe-americas mr-2 text-primary"></i>Mercado Hoje
+                    </h3>
+                    <span class="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                        <span class="w-2 h-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
+                        Atualização em tempo real
+                    </span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="marketTicker">
+                    <!-- Ticker items will be injected here -->
+                    <div class="animate-pulse flex space-x-4 bg-white dark:bg-gray-800 p-4 rounded-xl shadow">
+                        <div class="rounded-full bg-gray-200 dark:bg-gray-700 h-10 w-10"></div>
+                        <div class="flex-1 space-y-2 py-1">
+                            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Investment Suggestions -->
+            <div class="mb-8 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 p-6 rounded-2xl border border-indigo-100 dark:border-indigo-800">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-1">
+                            <i class="fas fa-lightbulb mr-2 text-yellow-500"></i>Sugestões de Investimento
+                        </h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Recomendações baseadas no seu perfil</p>
+                    </div>
+                    <select id="investProfile" onchange="updateSuggestions()" class="p-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                        <option value="conservador">Perfil Conservador</option>
+                        <option value="moderado" selected>Perfil Moderado</option>
+                        <option value="arrojado">Perfil Arrojado</option>
+                    </select>
+                </div>
+                <div id="investmentSuggestions" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Suggestions will be rendered here -->
+                </div>
+            </div>
+
+            <!-- Market Catalog -->
+            <div class="mb-8 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-1">
+                            <i class="fas fa-search-dollar mr-2 text-primary"></i>Explorar Mercado
+                        </h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Catálogo completo de ativos reais</p>
+                    </div>
+                    <div class="flex space-x-2 overflow-x-auto pb-2 md:pb-0 w-full md:w-auto">
+                        <button onclick="renderMarketCatalog('rendaFixa')" class="catalog-tab px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-primary text-white" data-tab="rendaFixa">Renda Fixa</button>
+                        <button onclick="renderMarketCatalog('acoes')" class="catalog-tab px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600" data-tab="acoes">Ações (B3)</button>
+                        <button onclick="renderMarketCatalog('fiis')" class="catalog-tab px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600" data-tab="fiis">FIIs</button>
+                        <button onclick="renderMarketCatalog('cripto')" class="catalog-tab px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600" data-tab="cripto">Cripto</button>
+                    </div>
+                </div>
+                <div id="marketCatalogContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Catalog items will be injected here -->
+                </div>
+            </div>
+
             <!-- Investment Overview -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 p-6 rounded-2xl border border-emerald-200 dark:border-emerald-800">
@@ -1251,10 +1315,8 @@
             // Atualizar dropdowns
             updateAllDropdowns();
             
-            // Adicionar dados de exemplo se necessário
-            if (appData.transactions.length === 0) {
-                addSampleData();
-            }
+            // Dados de exemplo removidos conforme solicitado
+
             
             // Atualizar tela
             updateAllDisplays();
@@ -1311,35 +1373,7 @@
             document.getElementById('filterMonth').addEventListener('change', applyFilters);
         }
 
-        function addSampleData() {
-            const currentYear = new Date().getFullYear();
-            const currentMonth = new Date().getMonth();
-            
-            appData.transactions = [
-                { id: 1, type: 'income', amount: 5000, description: 'Salário Mensal', category: 'Salário', date: `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-01` },
-                { id: 2, type: 'expense', amount: 1200, description: 'Aluguel', category: 'Moradia', date: `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-01` },
-                { id: 3, type: 'expense', amount: 350, description: 'Supermercado', category: 'Alimentação', date: `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-02` },
-                { id: 4, type: 'income', amount: 1500, description: 'Freelance', category: 'Freelance', date: `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-03` },
-                { id: 5, type: 'expense', amount: 200, description: 'Combustível', category: 'Transporte', date: `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-04` }
-            ];
-            
-            appData.goals = [
-                { id: 1, name: 'Reserva de Emergência', target: 20000, current: 8500, deadline: `${currentYear + 1}-12-31` },
-                { id: 2, name: 'Viagem Internacional', target: 8000, current: 2400, deadline: `${currentYear + 1}-06-30` }
-            ];
-            
-            appData.budgets = [
-                { id: 1, category: 'Alimentação', amount: 800, month: `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}` },
-                { id: 2, category: 'Transporte', amount: 300, month: `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}` }
-            ];
-            
-            appData.investments = [
-                { id: 1, name: 'Tesouro Selic 2027', type: 'renda-fixa', amount: 5000, currentValue: 5200, date: `${currentYear}-01-15` },
-                { id: 2, name: 'Ações ITUB4', type: 'renda-variavel', amount: 2000, currentValue: 2150, date: `${currentYear}-03-10` }
-            ];
-            
-            saveData();
-        }
+
 
         // FUNÇÕES DE SALVAMENTO E CARREGAMENTO
         function saveData() {
@@ -1412,6 +1446,9 @@
                 case 'investments':
                     updateInvestmentOverview();
                     renderInvestments();
+                    updateMarketTicker();
+                    updateSuggestions();
+                    renderMarketCatalog('rendaFixa');
                     break;
                 case 'reports':
                     renderDetailedAnalysis();
@@ -3044,6 +3081,341 @@
                 console.error('Erro ao exportar transações:', error);
                 showNotification('Erro ao exportar transações!', 'error');
             }
+        }
+
+        // FUNÇÕES DE MERCADO E SUGESTÕES
+        async function updateMarketTicker() {
+            const container = document.getElementById('marketTicker');
+            
+            try {
+                container.innerHTML = '<div class="col-span-3 text-center"><i class="fas fa-spinner fa-spin text-primary"></i> Carregando cotações...</div>';
+                
+                // Tentar buscar dados da API
+                const response = await fetch('https://economia.awesomeapi.com.br/last/USD-BRL,EUR-BRL,BTC-BRL');
+                const data = await response.json();
+                
+                const items = [
+                    { 
+                        code: 'USD', 
+                        name: 'Dólar Americano', 
+                        value: parseFloat(data.USDBRL.bid), 
+                        change: parseFloat(data.USDBRL.pctChange),
+                        icon: 'fa-dollar-sign',
+                        classes: {
+                            border: 'border-green-500',
+                            bgIcon: 'bg-green-100',
+                            bgIconDark: 'dark:bg-green-900/20',
+                            textIcon: 'text-green-600',
+                            textIconDark: 'dark:text-green-400'
+                        }
+                    },
+                    { 
+                        code: 'EUR', 
+                        name: 'Euro', 
+                        value: parseFloat(data.EURBRL.bid), 
+                        change: parseFloat(data.EURBRL.pctChange),
+                        icon: 'fa-euro-sign',
+                        classes: {
+                            border: 'border-blue-500',
+                            bgIcon: 'bg-blue-100',
+                            bgIconDark: 'dark:bg-blue-900/20',
+                            textIcon: 'text-blue-600',
+                            textIconDark: 'dark:text-blue-400'
+                        }
+                    },
+                    { 
+                        code: 'BTC', 
+                        name: 'Bitcoin', 
+                        value: parseFloat(data.BTCBRL.bid), 
+                        change: parseFloat(data.BTCBRL.pctChange),
+                        icon: 'fa-bitcoin',
+                        classes: {
+                            border: 'border-yellow-500',
+                            bgIcon: 'bg-yellow-100',
+                            bgIconDark: 'dark:bg-yellow-900/20',
+                            textIcon: 'text-yellow-600',
+                            textIconDark: 'dark:text-yellow-400'
+                        }
+                    }
+                ];
+
+                container.innerHTML = items.map(item => `
+                    <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow border-l-4 ${item.classes.border} hover:shadow-lg transition-all">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-full ${item.classes.bgIcon} ${item.classes.bgIconDark} flex items-center justify-center">
+                                    <i class="fas ${item.icon} ${item.classes.textIcon} ${item.classes.textIconDark}"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-gray-800 dark:text-white">${item.code}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">${item.name}</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-bold text-gray-800 dark:text-white">R$ ${item.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                                <p class="text-xs font-semibold ${item.change >= 0 ? 'text-success' : 'text-danger'}">
+                                    <i class="fas ${item.change >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'} mr-1"></i>
+                                    ${item.change}%
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                // Adicionar timestamp
+                const timestamp = new Date().toLocaleTimeString();
+                const titleElement = document.querySelector('#marketTicker').previousElementSibling.querySelector('span');
+                if(titleElement) {
+                    titleElement.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500 mr-1 animate-pulse"></span> Atualizado às ${timestamp}`;
+                }
+
+            } catch (error) {
+                console.error('Erro ao buscar cotações:', error);
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-4 text-gray-500">
+                        <i class="fas fa-exclamation-circle mb-2"></i>
+                        <p>Não foi possível carregar as cotações no momento.</p>
+                        <button onclick="updateMarketTicker()" class="mt-2 text-sm text-primary hover:underline">Tentar novamente</button>
+                    </div>
+                `;
+            }
+        }
+
+        function updateSuggestions() {
+            const profile = document.getElementById('investProfile').value;
+            const container = document.getElementById('investmentSuggestions');
+            
+            const suggestions = {
+                conservador: [
+                    {
+                        title: 'Tesouro Selic',
+                        desc: 'Baixo risco, alta liquidez. Ideal para reserva de emergência.',
+                        return: 'Selic + 0.1%',
+                        risk: 'Muito Baixo',
+                        classes: {
+                            border: 'border-green-500',
+                            bgBadge: 'bg-green-100',
+                            textBadge: 'text-green-700',
+                            bgBadgeDark: 'dark:bg-green-900/30',
+                            textBadgeDark: 'dark:text-green-300',
+                            textReturn: 'text-green-600',
+                            textReturnDark: 'dark:text-green-400'
+                        }
+                    },
+                    {
+                        title: 'CDB Liquidez Diária',
+                        desc: 'Segurança do FGC e facilidade de resgate.',
+                        return: '100% do CDI',
+                        risk: 'Baixo',
+                        classes: {
+                            border: 'border-blue-500',
+                            bgBadge: 'bg-blue-100',
+                            textBadge: 'text-blue-700',
+                            bgBadgeDark: 'dark:bg-blue-900/30',
+                            textBadgeDark: 'dark:text-blue-300',
+                            textReturn: 'text-blue-600',
+                            textReturnDark: 'dark:text-blue-400'
+                        }
+                    },
+                    {
+                        title: 'LCI/LCA',
+                        desc: 'Isento de Imposto de Renda. Bom para médio prazo.',
+                        return: '90-95% do CDI',
+                        risk: 'Baixo',
+                        classes: {
+                            border: 'border-teal-500',
+                            bgBadge: 'bg-teal-100',
+                            textBadge: 'text-teal-700',
+                            bgBadgeDark: 'dark:bg-teal-900/30',
+                            textBadgeDark: 'dark:text-teal-300',
+                            textReturn: 'text-teal-600',
+                            textReturnDark: 'dark:text-teal-400'
+                        }
+                    }
+                ],
+                moderado: [
+                    {
+                        title: 'Fundos Imobiliários (FIIs)',
+                        desc: 'Renda mensal com aluguéis e potencial de valorização.',
+                        return: 'DY ~0.8% a.m.',
+                        risk: 'Médio',
+                        classes: {
+                            border: 'border-purple-500',
+                            bgBadge: 'bg-purple-100',
+                            textBadge: 'text-purple-700',
+                            bgBadgeDark: 'dark:bg-purple-900/30',
+                            textBadgeDark: 'dark:text-purple-300',
+                            textReturn: 'text-purple-600',
+                            textReturnDark: 'dark:text-purple-400'
+                        }
+                    },
+                    {
+                        title: 'Tesouro IPCA+',
+                        desc: 'Proteção contra inflação para longo prazo.',
+                        return: 'IPCA + 6%',
+                        risk: 'Médio-Baixo',
+                        classes: {
+                            border: 'border-orange-500',
+                            bgBadge: 'bg-orange-100',
+                            textBadge: 'text-orange-700',
+                            bgBadgeDark: 'dark:bg-orange-900/30',
+                            textBadgeDark: 'dark:text-orange-300',
+                            textReturn: 'text-orange-600',
+                            textReturnDark: 'dark:text-orange-400'
+                        }
+                    },
+                    {
+                        title: 'Multimercados',
+                        desc: 'Gestão profissional diversificada em vários ativos.',
+                        return: 'Variável',
+                        risk: 'Médio',
+                        classes: {
+                            border: 'border-indigo-500',
+                            bgBadge: 'bg-indigo-100',
+                            textBadge: 'text-indigo-700',
+                            bgBadgeDark: 'dark:bg-indigo-900/30',
+                            textBadgeDark: 'dark:text-indigo-300',
+                            textReturn: 'text-indigo-600',
+                            textReturnDark: 'dark:text-indigo-400'
+                        }
+                    }
+                ],
+                arrojado: [
+                    {
+                        title: 'Ações (Bolsa)',
+                        desc: 'Potencial de altos retornos com empresas consolidadas.',
+                        return: 'Variável',
+                        risk: 'Alto',
+                        classes: {
+                            border: 'border-red-500',
+                            bgBadge: 'bg-red-100',
+                            textBadge: 'text-red-700',
+                            bgBadgeDark: 'dark:bg-red-900/30',
+                            textBadgeDark: 'dark:text-red-300',
+                            textReturn: 'text-red-600',
+                            textReturnDark: 'dark:text-red-400'
+                        }
+                    },
+                    {
+                        title: 'Criptomoedas',
+                        desc: 'Alta volatilidade e tecnologia disruptiva.',
+                        return: 'Variável',
+                        risk: 'Muito Alto',
+                        classes: {
+                            border: 'border-yellow-500',
+                            bgBadge: 'bg-yellow-100',
+                            textBadge: 'text-yellow-700',
+                            bgBadgeDark: 'dark:bg-yellow-900/30',
+                            textBadgeDark: 'dark:text-yellow-300',
+                            textReturn: 'text-yellow-600',
+                            textReturnDark: 'dark:text-yellow-400'
+                        }
+                    },
+                    {
+                        title: 'ETFs Internacionais',
+                        desc: 'Exposição ao dólar e mercado global (S&P 500).',
+                        return: 'Dólar + Variação',
+                        risk: 'Alto',
+                        classes: {
+                            border: 'border-blue-500',
+                            bgBadge: 'bg-blue-100',
+                            textBadge: 'text-blue-700',
+                            bgBadgeDark: 'dark:bg-blue-900/30',
+                            textBadgeDark: 'dark:text-blue-300',
+                            textReturn: 'text-blue-600',
+                            textReturnDark: 'dark:text-blue-400'
+                        }
+                    }
+                ]
+            };
+
+            const items = suggestions[profile] || suggestions.moderado;
+
+            container.innerHTML = items.map(item => `
+                <div class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow hover:shadow-lg transition-all transform hover:-translate-y-1 border-t-4 ${item.classes.border}">
+                    <h4 class="font-bold text-gray-800 dark:text-white mb-2 flex justify-between items-center">
+                        ${item.title}
+                        <span class="text-xs px-2 py-1 rounded-full ${item.classes.bgBadge} ${item.classes.textBadge} ${item.classes.bgBadgeDark} ${item.classes.textBadgeDark}">${item.risk}</span>
+                    </h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4 h-10">${item.desc}</p>
+                    <div class="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
+                        <span class="text-xs text-gray-500">Retorno Est.</span>
+                        <span class="font-bold ${item.classes.textReturn} ${item.classes.textReturnDark}">${item.return}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        const marketCatalog = {
+            rendaFixa: [
+                { name: 'Tesouro Selic 2029', type: 'Tesouro Direto', risk: 'Muito Baixo', return: 'Selic + 0.15%', min: 'R$ 150,00', border: 'border-green-500', text: 'text-green-600' },
+                { name: 'Tesouro IPCA+ 2029', type: 'Tesouro Direto', risk: 'Baixo', return: 'IPCA + 6.18%', min: 'R$ 30,00', border: 'border-orange-500', text: 'text-orange-600' },
+                { name: 'Tesouro IPCA+ 2035', type: 'Tesouro Direto', risk: 'Médio-Baixo', return: 'IPCA + 6.25%', min: 'R$ 40,00', border: 'border-orange-500', text: 'text-orange-600' },
+                { name: 'Tesouro Prefixado 2027', type: 'Tesouro Direto', risk: 'Médio', return: '12.5% a.a.', min: 'R$ 35,00', border: 'border-blue-500', text: 'text-blue-600' },
+                { name: 'CDB Banco Sofisa', type: 'CDB', risk: 'Baixo', return: '110% do CDI', min: 'R$ 1,00', border: 'border-purple-500', text: 'text-purple-600' },
+                { name: 'LCI Banco ABC', type: 'LCI', risk: 'Baixo', return: '93% do CDI (Isento IR)', min: 'R$ 1.000,00', border: 'border-indigo-500', text: 'text-indigo-600' }
+            ],
+            acoes: [
+                { name: 'Vale S.A.', ticker: 'VALE3', type: 'Mineração', risk: 'Médio-Alto', price: 'R$ 60,50', return: 'Div. Yield Alto', border: 'border-red-500', text: 'text-red-600' },
+                { name: 'Petrobras PN', ticker: 'PETR4', type: 'Petróleo', risk: 'Médio-Alto', price: 'R$ 38,20', return: 'Div. Yield Alto', border: 'border-red-500', text: 'text-red-600' },
+                { name: 'Itaú Unibanco', ticker: 'ITUB4', type: 'Bancos', risk: 'Médio', price: 'R$ 33,15', return: 'Crescimento', border: 'border-blue-500', text: 'text-blue-600' },
+                { name: 'Banco do Brasil', ticker: 'BBAS3', type: 'Bancos', risk: 'Médio', price: 'R$ 27,80', return: 'Div. Yield Alto', border: 'border-blue-500', text: 'text-blue-600' },
+                { name: 'WEG S.A.', ticker: 'WEGE3', type: 'Indústria', risk: 'Médio', price: 'R$ 52,90', return: 'Valorização', border: 'border-teal-500', text: 'text-teal-600' },
+                { name: 'Localiza', ticker: 'RENT3', type: 'Aluguel de Carros', risk: 'Médio', price: 'R$ 45,10', return: 'Crescimento', border: 'border-green-500', text: 'text-green-600' }
+            ],
+            fiis: [
+                { name: 'CSHG Logística', ticker: 'HGLG11', type: 'Tijolo (Logístico)', risk: 'Médio-Baixo', price: 'R$ 162,00', return: 'DY 0.75% a.m.', border: 'border-yellow-500', text: 'text-yellow-600' },
+                { name: 'Kinea Rendimentos', ticker: 'KNCR11', type: 'Papel (CDI)', risk: 'Médio', price: 'R$ 103,50', return: 'DY 0.95% a.m.', border: 'border-orange-500', text: 'text-orange-600' },
+                { name: 'Maxi Renda', ticker: 'MXRF11', type: 'Híbrido', risk: 'Médio', price: 'R$ 10,25', return: 'DY 1.05% a.m.', border: 'border-red-500', text: 'text-red-600' },
+                { name: 'XP Malls', ticker: 'XPML11', type: 'Tijolo (Shoppings)', risk: 'Médio', price: 'R$ 115,80', return: 'DY 0.70% a.m.', border: 'border-blue-500', text: 'text-blue-600' },
+                { name: 'Vinci Shopping', ticker: 'VISC11', type: 'Tijolo (Shoppings)', risk: 'Médio', price: 'R$ 120,10', return: 'DY 0.72% a.m.', border: 'border-indigo-500', text: 'text-indigo-600' }
+            ],
+            cripto: [
+                { name: 'Bitcoin', ticker: 'BTC', type: 'Criptomoeda', risk: 'Muito Alto', price: 'R$ 350.000', return: 'Volátil', border: 'border-yellow-500', text: 'text-yellow-600' },
+                { name: 'Ethereum', ticker: 'ETH', type: 'Smart Contracts', risk: 'Muito Alto', price: 'R$ 18.500', return: 'Volátil', border: 'border-purple-500', text: 'text-purple-600' },
+                { name: 'Solana', ticker: 'SOL', type: 'Blockchain L1', risk: 'Muito Alto', price: 'R$ 850,00', return: 'Volátil', border: 'border-teal-500', text: 'text-teal-600' }
+            ]
+        };
+
+        function renderMarketCatalog(category) {
+            const container = document.getElementById('marketCatalogContainer');
+            const items = marketCatalog[category] || [];
+            
+            // Update active tab
+            document.querySelectorAll('.catalog-tab').forEach(btn => {
+                if(btn.dataset.tab === category) {
+                    btn.classList.remove('bg-gray-100', 'dark:bg-gray-700', 'text-gray-600', 'dark:text-gray-300');
+                    btn.classList.add('bg-primary', 'text-white');
+                } else {
+                    btn.classList.add('bg-gray-100', 'dark:bg-gray-700', 'text-gray-600', 'dark:text-gray-300');
+                    btn.classList.remove('bg-primary', 'text-white');
+                }
+            });
+
+            container.innerHTML = items.map(item => `
+                <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl border-l-4 ${item.border} hover:bg-white dark:hover:bg-gray-700 transition-all cursor-pointer group">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <h4 class="font-bold text-gray-800 dark:text-white group-hover:text-primary transition-colors">
+                                ${item.ticker ? `<span class="bg-gray-200 dark:bg-gray-600 px-2 py-0.5 rounded text-xs mr-2">${item.ticker}</span>` : ''}
+                                ${item.name}
+                            </h4>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${item.type}</p>
+                        </div>
+                        <span class="text-xs font-semibold px-2 py-1 rounded-full bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 whitespace-nowrap">${item.risk}</span>
+                    </div>
+                    <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-200 dark:border-gray-600">
+                        <div class="text-center">
+                            <p class="text-[10px] uppercase text-gray-500 tracking-wider">Retorno/DY</p>
+                            <p class="font-bold ${item.text} text-sm">${item.return}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] uppercase text-gray-500 tracking-wider">${item.min ? 'Invest. Min.' : 'Preço Aprox.'}</p>
+                            <p class="font-bold text-gray-800 dark:text-white text-sm">${item.min || item.price}</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
         }
 
         // FUNÇÕES UTILITÁRIAS
