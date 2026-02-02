@@ -112,6 +112,13 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
+        
+        // Configuração para evitar erros de conexão (Unknown SID / 400)
+        db.settings({ 
+            experimentalForceLongPolling: true,
+            ignoreUndefinedProperties: true
+        });
+
         const analytics = firebase.analytics();
         
         let currentUser = null;
