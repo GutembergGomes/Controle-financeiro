@@ -138,6 +138,9 @@
                     <button onclick="showSection('budget')" class="nav-btn px-4 py-2 rounded-lg hover:bg-white/20 transition-all duration-200">
                         <i class="fas fa-calculator mr-2"></i>Orçamento
                     </button>
+                    <button onclick="showSection('debts')" class="nav-btn px-4 py-2 rounded-lg hover:bg-white/20 transition-all duration-200">
+                        <i class="fas fa-credit-card mr-2"></i>Dívidas
+                    </button>
                     <button onclick="showSection('goals')" class="nav-btn px-4 py-2 rounded-lg hover:bg-white/20 transition-all duration-200">
                         <i class="fas fa-target mr-2"></i>Metas
                     </button>
@@ -177,6 +180,9 @@
             </button>
             <button onclick="showSection('budget'); toggleMobileMenu()" class="block w-full text-left py-3 px-4 text-white hover:bg-white/20 rounded-lg transition-colors">
                 <i class="fas fa-calculator mr-3"></i>Orçamento
+            </button>
+            <button onclick="showSection('debts'); toggleMobileMenu()" class="block w-full text-left py-3 px-4 text-white hover:bg-white/20 rounded-lg transition-colors">
+                <i class="fas fa-credit-card mr-3"></i>Dívidas
             </button>
             <button onclick="showSection('goals'); toggleMobileMenu()" class="block w-full text-left py-3 px-4 text-white hover:bg-white/20 rounded-lg transition-colors">
                 <i class="fas fa-target mr-3"></i>Metas
@@ -570,6 +576,51 @@
             </div>
         </section>
 
+        <!-- Debts Section -->
+        <section id="debts" class="section hidden">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">
+                        <i class="fas fa-credit-card mr-3 text-primary"></i>Gestão de Dívidas
+                    </h2>
+                    <p class="text-gray-600 dark:text-gray-400">Controle seus cartões e financiamentos</p>
+                </div>
+                <button onclick="openDebtModal()" class="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white px-6 py-3 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300">
+                    <i class="fas fa-plus mr-2"></i>Nova Dívida
+                </button>
+            </div>
+
+            <!-- Debt Summary -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="gradient-border">
+                    <div class="bg-gradient-to-br from-red-500 to-red-600 p-6 rounded-2xl text-white shadow-xl">
+                        <p class="text-sm opacity-90 font-medium">Total em Dívidas</p>
+                        <p id="totalDebtAmount" class="text-3xl font-bold mt-1">R$ 0,00</p>
+                        <p class="text-xs opacity-75 mt-2">Saldo devedor total</p>
+                    </div>
+                </div>
+                <div class="gradient-border">
+                    <div class="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-2xl text-white shadow-xl">
+                        <p class="text-sm opacity-90 font-medium">Valor Pago</p>
+                        <p id="totalDebtPaid" class="text-3xl font-bold mt-1">R$ 0,00</p>
+                        <p class="text-xs opacity-75 mt-2">Amortizado até agora</p>
+                    </div>
+                </div>
+                <div class="gradient-border">
+                    <div class="bg-gradient-to-br from-purple-500 to-purple-600 p-6 rounded-2xl text-white shadow-xl">
+                        <p class="text-sm opacity-90 font-medium">Próxima Parcela</p>
+                        <p id="nextDebtInstallment" class="text-3xl font-bold mt-1">R$ 0,00</p>
+                        <p class="text-xs opacity-75 mt-2">Estimativa mensal</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Debts List -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="debtsList">
+                <!-- Debts will be rendered here -->
+            </div>
+        </section>
+
         <!-- Goals Section -->
         <section id="goals" class="section hidden">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -809,7 +860,7 @@
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Valor Inicial (R$)</label>
-                            <input type="number" id="compoundPrincipal" step="0.01" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="1000">
+                            <input type="text" id="compoundPrincipal" oninput="formatCurrencyInput(this)" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="1.000,00">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Taxa de Juros (% ao ano)</label>
@@ -841,7 +892,7 @@
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Gastos Mensais (R$)</label>
-                            <input type="number" id="monthlyExpenses" step="0.01" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="3000">
+                            <input type="text" id="monthlyExpenses" oninput="formatCurrencyInput(this)" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="3.000,00">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Meses de Cobertura</label>
@@ -964,7 +1015,7 @@
                     <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                         <i class="fas fa-dollar-sign mr-1 text-primary"></i>Valor
                     </label>
-                    <input type="number" id="transactionAmount" step="0.01" required 
+                    <input type="text" id="transactionAmount" required oninput="formatCurrencyInput(this)"
                            class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                            placeholder="0,00">
                 </div>
@@ -1000,6 +1051,16 @@
                         <option value="paid">Pago / Recebido</option>
                         <option value="pending">Pendente</option>
                     </select>
+                </div>
+                <div id="transactionDebtContainer" class="hidden">
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <i class="fas fa-credit-card mr-1 text-danger"></i>Vincular a Dívida (Opcional)
+                    </label>
+                    <select id="transactionDebt" 
+                            class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                        <option value="">Selecione uma dívida...</option>
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Ao selecionar, o valor será abatido da dívida.</p>
                 </div>
                 <div class="flex gap-3 pt-4">
                     <button type="submit" class="flex-1 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg">
@@ -1038,7 +1099,7 @@
                     <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                         <i class="fas fa-bullseye mr-1 text-success"></i>Valor Alvo
                     </label>
-                    <input type="number" id="goalTarget" step="0.01" required 
+                    <input type="text" id="goalTarget" required oninput="formatCurrencyInput(this)"
                            class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                            placeholder="0,00">
                 </div>
@@ -1054,6 +1115,65 @@
                         <i class="fas fa-plus mr-2"></i>Criar Meta
                     </button>
                     <button type="button" onclick="closeGoalModal()" 
+                            class="px-8 py-4 bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 rounded-xl font-semibold transition-colors">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Debt Modal -->
+    <div id="debtModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 modal-overlay">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md animate-bounce-in shadow-2xl border border-gray-200 dark:border-gray-700">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-800 dark:text-white">
+                    <i class="fas fa-credit-card mr-2 text-primary"></i>Nova Dívida
+                </h3>
+                <button onclick="closeDebtModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            <form id="debtForm" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <i class="fas fa-font mr-1 text-primary"></i>Nome/Descrição
+                    </label>
+                    <input type="text" id="debtName" required 
+                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                           placeholder="Ex: Cartão Visa, Financiamento Carro">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <i class="fas fa-money-bill-wave mr-1 text-success"></i>Valor Total
+                    </label>
+                    <input type="text" id="debtTotalAmount" required oninput="formatCurrencyInput(this)"
+                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                           placeholder="0,00">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            <i class="fas fa-layer-group mr-1 text-warning"></i>Total Parcelas
+                        </label>
+                        <input type="number" id="debtTotalInstallments" min="1" required 
+                               class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                               placeholder="12">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            <i class="fas fa-check-circle mr-1 text-info"></i>Pagas
+                        </label>
+                        <input type="number" id="debtPaidInstallments" min="0" required 
+                               class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                               placeholder="0">
+                    </div>
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button type="submit" class="flex-1 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg">
+                        <i class="fas fa-save mr-2"></i>Salvar
+                    </button>
+                    <button type="button" onclick="closeDebtModal()" 
                             class="px-8 py-4 bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 rounded-xl font-semibold transition-colors">
                         Cancelar
                     </button>
@@ -1086,7 +1206,7 @@
                     <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                         <i class="fas fa-dollar-sign mr-1 text-primary"></i>Valor Mensal
                     </label>
-                    <input type="number" id="budgetAmount" step="0.01" required 
+                    <input type="text" id="budgetAmount" required oninput="formatCurrencyInput(this)"
                            class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                            placeholder="0,00">
                 </div>
@@ -1149,7 +1269,7 @@
                     <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                         <i class="fas fa-dollar-sign mr-1 text-success"></i>Valor Investido
                     </label>
-                    <input type="number" id="investmentAmount" step="0.01" required 
+                    <input type="text" id="investmentAmount" required oninput="formatCurrencyInput(this)"
                            class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                            placeholder="0,00">
                 </div>
@@ -1157,7 +1277,7 @@
                     <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                         <i class="fas fa-chart-line mr-1 text-accent"></i>Valor Atual
                     </label>
-                    <input type="number" id="investmentCurrentValue" step="0.01" required 
+                    <input type="text" id="investmentCurrentValue" required oninput="formatCurrencyInput(this)"
                            class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                            placeholder="0,00">
                 </div>
@@ -1297,6 +1417,7 @@
                 return {
                     transactions: [],
                     goals: [],
+                    debts: [],
                     budgets: [],
                     investments: [],
                     categories: {
@@ -1319,6 +1440,7 @@
                 return {
                     transactions: Array.isArray(loadedData.transactions) ? loadedData.transactions : [],
                     goals: Array.isArray(loadedData.goals) ? loadedData.goals : [],
+                    debts: Array.isArray(loadedData.debts) ? loadedData.debts : [],
                     budgets: Array.isArray(loadedData.budgets) ? loadedData.budgets : [],
                     investments: Array.isArray(loadedData.investments) ? loadedData.investments : [],
                     categories: {
@@ -1424,6 +1546,8 @@
             document.getElementById('goalForm').addEventListener('submit', handleGoalSubmit);
             document.getElementById('budgetForm').addEventListener('submit', handleBudgetSubmit);
             document.getElementById('investmentForm').addEventListener('submit', handleInvestmentSubmit);
+            const debtForm = document.getElementById('debtForm');
+            if (debtForm) debtForm.addEventListener('submit', handleDebtSubmit);
 
             // Filter listeners
             document.getElementById('filterType').addEventListener('change', applyFilters);
@@ -1497,6 +1621,10 @@
                     updateBudgetOverview();
                     renderBudgetCategories();
                     break;
+                case 'debts':
+                    updateDebtStats();
+                    renderDebts();
+                    break;
                 case 'goals':
                     updateGoalsStats();
                     renderGoals();
@@ -1543,6 +1671,32 @@
                 ${title}
             `;
             updateTransactionCategories();
+            
+            // Debt integration
+            const debtContainer = document.getElementById('transactionDebtContainer');
+            const debtSelect = document.getElementById('transactionDebt');
+            
+            if (type === 'expense' && appData.debts && appData.debts.length > 0) {
+                debtContainer.classList.remove('hidden');
+                debtSelect.innerHTML = '<option value="">Selecione uma dívida...</option>';
+                
+                // Filter active debts
+                const activeDebts = appData.debts.filter(d => d.paidInstallments < d.totalInstallments);
+                
+                if (activeDebts.length > 0) {
+                    activeDebts.forEach(debt => {
+                        const option = document.createElement('option');
+                        option.value = debt.id;
+                        option.textContent = `${debt.name} (Restam ${debt.totalInstallments - debt.paidInstallments} parc.)`;
+                        debtSelect.appendChild(option);
+                    });
+                } else {
+                    debtContainer.classList.add('hidden');
+                }
+            } else {
+                debtContainer.classList.add('hidden');
+            }
+
             document.getElementById('transactionModal').classList.remove('hidden');
             document.getElementById('transactionAmount').focus();
         }
@@ -1599,11 +1753,12 @@
         function handleTransactionSubmit(e) {
             e.preventDefault();
             
-            const amount = parseFloat(document.getElementById('transactionAmount').value);
+            const amount = parseCurrencyInput(document.getElementById('transactionAmount').value);
             const description = document.getElementById('transactionDescription').value.trim();
             const category = document.getElementById('transactionCategory').value;
             const date = document.getElementById('transactionDate').value;
             const status = document.getElementById('transactionStatus').value;
+            const debtId = document.getElementById('transactionDebt').value;
 
             if (amount <= 0) {
                 showNotification('O valor deve ser maior que zero!', 'error');
@@ -1617,8 +1772,26 @@
                 description: description,
                 category: category,
                 date: date,
-                status: status
+                status: status,
+                linkedDebtId: debtId ? parseInt(debtId) : null
             };
+
+            // Process Debt Link
+            if (currentTransactionType === 'expense' && debtId && appData.debts) {
+                const debtIndex = appData.debts.findIndex(d => d.id == debtId);
+                if (debtIndex !== -1) {
+                    const debt = appData.debts[debtIndex];
+                    
+                    // Update debt stats
+                    debt.paidInstallments = Math.min(debt.paidInstallments + 1, debt.totalInstallments);
+                    debt.paidAmount = Math.min(debt.paidAmount + amount, debt.totalAmount);
+                    
+                    // Check if completed
+                    if (debt.paidInstallments >= debt.totalInstallments) {
+                        showNotification(`Parabéns! Você quitou a dívida: ${debt.name}`, 'success');
+                    }
+                }
+            }
 
             appData.transactions.unshift(transaction);
             
@@ -1633,6 +1806,18 @@
 
         function deleteTransaction(id) {
             if (confirm('Tem certeza que deseja excluir esta transação?')) {
+                const transaction = appData.transactions.find(t => t.id === id);
+                
+                // Revert debt changes if linked
+                if (transaction && transaction.linkedDebtId && appData.debts) {
+                    const debtIndex = appData.debts.findIndex(d => d.id === transaction.linkedDebtId);
+                    if (debtIndex !== -1) {
+                        const debt = appData.debts[debtIndex];
+                        debt.paidInstallments = Math.max(0, debt.paidInstallments - 1);
+                        debt.paidAmount = Math.max(0, debt.paidAmount - transaction.amount);
+                    }
+                }
+
                 appData.transactions = appData.transactions.filter(t => t.id !== id);
                 saveData();
                 updateAllDisplays();
@@ -1657,7 +1842,7 @@
             e.preventDefault();
             
             const name = document.getElementById('goalName').value.trim();
-            const target = parseFloat(document.getElementById('goalTarget').value);
+            const target = parseCurrencyInput(document.getElementById('goalTarget').value);
             const deadline = document.getElementById('goalDeadline').value;
 
             if (target <= 0) {
@@ -1727,7 +1912,7 @@
             e.preventDefault();
             
             const category = document.getElementById('budgetCategory').value;
-            const amount = parseFloat(document.getElementById('budgetAmount').value);
+            const amount = parseCurrencyInput(document.getElementById('budgetAmount').value);
             const month = document.getElementById('budgetMonth').value;
 
             if (amount <= 0) {
@@ -1773,8 +1958,8 @@
             
             const name = document.getElementById('investmentName').value.trim();
             const type = document.getElementById('investmentType').value;
-            const amount = parseFloat(document.getElementById('investmentAmount').value);
-            const currentValue = parseFloat(document.getElementById('investmentCurrentValue').value);
+            const amount = parseCurrencyInput(document.getElementById('investmentAmount').value);
+            const currentValue = parseCurrencyInput(document.getElementById('investmentCurrentValue').value);
             const date = document.getElementById('investmentDate').value;
 
             if (amount <= 0) {
@@ -1847,6 +2032,10 @@
             renderInvestments();
             renderDetailedAnalysis();
             renderFinancialHealth();
+            
+            // Debt updates
+            if (typeof renderDebts === 'function') renderDebts();
+            if (typeof updateDebtStats === 'function') updateDebtStats();
         }
 
         function updateAllDropdowns() {
@@ -2203,6 +2392,147 @@
             }).join('');
         }
 
+        // DEBT FUNCTIONS
+        function openDebtModal() {
+            document.getElementById('debtModal').classList.remove('hidden');
+            document.getElementById('debtName').focus();
+        }
+
+        function closeDebtModal() {
+            document.getElementById('debtModal').classList.add('hidden');
+            document.getElementById('debtForm').reset();
+        }
+
+        function handleDebtSubmit(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('debtName').value;
+            const totalAmount = parseCurrencyInput(document.getElementById('debtTotalAmount').value);
+            const totalInstallments = parseInt(document.getElementById('debtTotalInstallments').value);
+            const paidInstallments = parseInt(document.getElementById('debtPaidInstallments').value);
+            
+            if (!name || isNaN(totalAmount) || isNaN(totalInstallments)) {
+                showNotification('Preencha todos os campos obrigatórios!', 'error');
+                return;
+            }
+            
+            const debt = {
+                id: Date.now(),
+                name,
+                totalAmount,
+                totalInstallments,
+                paidInstallments,
+                paidAmount: (totalAmount / totalInstallments) * paidInstallments,
+                date: new Date().toISOString()
+            };
+            
+            if (!appData.debts) appData.debts = [];
+            appData.debts.push(debt);
+            saveData();
+            
+            closeDebtModal();
+            updateDebtStats();
+            renderDebts();
+            showNotification('Dívida cadastrada com sucesso!', 'success');
+        }
+
+        function deleteDebt(id) {
+            if (confirm('Tem certeza que deseja excluir esta dívida?')) {
+                appData.debts = appData.debts.filter(d => d.id !== id);
+                saveData();
+                updateDebtStats();
+                renderDebts();
+                showNotification('Dívida excluída com sucesso!', 'success');
+            }
+        }
+
+        function updateDebtStats() {
+            if (!appData.debts) appData.debts = [];
+            const totalDebt = appData.debts.reduce((sum, d) => sum + d.totalAmount, 0);
+            const totalPaid = appData.debts.reduce((sum, d) => sum + d.paidAmount, 0);
+            
+            const nextInstallment = appData.debts.reduce((sum, d) => {
+                if (d.paidInstallments < d.totalInstallments) {
+                    return sum + (d.totalAmount / d.totalInstallments);
+                }
+                return sum;
+            }, 0);
+            
+            const totalDebtEl = document.getElementById('totalDebtAmount');
+            if (totalDebtEl) totalDebtEl.textContent = formatCurrency(totalDebt - totalPaid);
+            
+            const totalPaidEl = document.getElementById('totalDebtPaid');
+            if (totalPaidEl) totalPaidEl.textContent = formatCurrency(totalPaid);
+            
+            const nextInstallmentEl = document.getElementById('nextDebtInstallment');
+            if (nextInstallmentEl) nextInstallmentEl.textContent = formatCurrency(nextInstallment);
+        }
+
+        function renderDebts() {
+            const container = document.getElementById('debtsList');
+            if (!container) return;
+            
+            if (!appData.debts || appData.debts.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-12 text-gray-500 dark:text-gray-400">
+                        <div class="w-20 h-20 mx-auto mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                            <i class="fas fa-credit-card text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2">Nenhuma dívida cadastrada</h3>
+                        <p class="text-sm mb-4">Cadastre seus cartões e financiamentos para controle</p>
+                        <button onclick="openDebtModal()" class="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105">
+                            <i class="fas fa-plus mr-2"></i>Nova Dívida
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = appData.debts.map(debt => {
+                const progress = (debt.paidInstallments / debt.totalInstallments) * 100;
+                const remainingAmount = debt.totalAmount - debt.paidAmount;
+                const installmentValue = debt.totalAmount / debt.totalInstallments;
+                
+                return `
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-1">${debt.name}</h3>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">
+                                    ${debt.paidInstallments}/${debt.totalInstallments} Parcelas
+                                </p>
+                            </div>
+                            <button onclick="deleteDebt(${debt.id})" class="text-gray-400 hover:text-danger transition-colors p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Progresso</span>
+                                <span class="text-sm font-bold text-primary">${progress.toFixed(1)}%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                                <div class="bg-gradient-to-r from-primary to-secondary h-2.5 rounded-full transition-all duration-500" 
+                                     style="width: ${progress}%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 mt-4 bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl">
+                            <div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Valor da Parcela</p>
+                                <p class="font-bold text-gray-800 dark:text-white">${formatCurrency(installmentValue)}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Restante</p>
+                                <p class="font-bold text-danger">${formatCurrency(remainingAmount)}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
         function renderGoals() {
             const container = document.getElementById('goalsList');
 
@@ -2284,10 +2614,10 @@
                         
                         ${!isCompleted ? `
                             <div class="flex gap-2">
-                                <input type="number" placeholder="Valor" step="0.01" min="0.01"
+                                <input type="text" placeholder="Valor" oninput="formatCurrencyInput(this)"
                                        class="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                        id="goalInput${goal.id}">
-                                <button onclick="updateGoal(${goal.id}, parseFloat(document.getElementById('goalInput${goal.id}').value) || 0)"
+                                <button onclick="updateGoal(${goal.id}, parseCurrencyInput(document.getElementById('goalInput${goal.id}').value) || 0)"
                                         class="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105">
                                     <i class="fas fa-plus"></i>
                                 </button>
@@ -2387,10 +2717,10 @@
                                 ${formatDate(investment.date)}
                             </div>
                             <div class="flex gap-2">
-                                <input type="number" placeholder="Novo valor" step="0.01" min="0"
+                                <input type="text" placeholder="Novo valor" oninput="formatCurrencyInput(this)"
                                        class="w-24 p-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                        id="investmentInput${investment.id}">
-                                <button onclick="updateInvestment(${investment.id}, parseFloat(document.getElementById('investmentInput${investment.id}').value) || 0)"
+                                <button onclick="updateInvestment(${investment.id}, parseCurrencyInput(document.getElementById('investmentInput${investment.id}').value) || 0)"
                                         class="bg-gradient-to-r from-accent to-emerald-600 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-300 transform hover:scale-105">
                                     <i class="fas fa-edit"></i>
                                 </button>
@@ -3086,7 +3416,7 @@
 
         // FUNÇÕES DE FERRAMENTAS
         function calculateCompoundInterest() {
-            const principal = parseFloat(document.getElementById('compoundPrincipal').value) || 0;
+            const principal = parseCurrencyInput(document.getElementById('compoundPrincipal').value) || 0;
             const rate = parseFloat(document.getElementById('compoundRate').value) || 0;
             const time = parseFloat(document.getElementById('compoundTime').value) || 0;
 
@@ -3104,7 +3434,7 @@
         }
 
         function calculateEmergencyFund() {
-            const monthlyExpenses = parseFloat(document.getElementById('monthlyExpenses').value) || 0;
+            const monthlyExpenses = parseCurrencyInput(document.getElementById('monthlyExpenses').value) || 0;
             const months = parseFloat(document.getElementById('emergencyMonths').value) || 6;
 
             if (monthlyExpenses <= 0) {
@@ -3853,6 +4183,20 @@
         }
 
         // FUNÇÕES UTILITÁRIAS
+        function formatCurrencyInput(input) {
+            let value = input.value.replace(/\D/g, '');
+            value = (value / 100).toFixed(2) + '';
+            value = value.replace('.', ',');
+            value = value.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+            input.value = value;
+        }
+
+        function parseCurrencyInput(value) {
+            if (!value) return 0;
+            // Remove pontos de milhar e troca vírgula decimal por ponto
+            return parseFloat(value.replace(/\./g, '').replace(',', '.'));
+        }
+
         function formatCurrency(amount) {
             return new Intl.NumberFormat(appData.settings.dateFormat, {
                 style: 'currency',
