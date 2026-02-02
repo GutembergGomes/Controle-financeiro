@@ -2545,13 +2545,19 @@
             if (confirm('Tem certeza que deseja excluir esta transação?')) {
                 const transaction = appData.transactions.find(t => t.id === id);
                 
-                // Revert debt changes if linked
-                if (transaction && transaction.linkedDebtId && appData.debts) {
-                    const debtIndex = appData.debts.findIndex(d => d.id === transaction.linkedDebtId);
+                // Revert debt changes if linked AND PAID
+                // Usa 'debtId' (novo padrão) ou 'linkedDebtId' (legado)
+                const debtId = transaction.debtId || transaction.linkedDebtId;
+                
+                if (transaction && debtId && appData.debts) {
+                    const debtIndex = appData.debts.findIndex(d => d.id === debtId);
                     if (debtIndex !== -1) {
                         const debt = appData.debts[debtIndex];
-                        debt.paidInstallments = Math.max(0, debt.paidInstallments - 1);
-                        debt.paidAmount = Math.max(0, debt.paidAmount - transaction.amount);
+                        // Só decrementa se a transação estava PAGA
+                        if (transaction.status === 'paid') {
+                            debt.paidInstallments = Math.max(0, (debt.paidInstallments || 0) - 1);
+                            debt.paidAmount = Math.max(0, (debt.paidAmount || 0) - transaction.amount);
+                        }
                     }
                 }
 
@@ -3275,7 +3281,21 @@
                 // Se não, gera como pending
                 // A data deve avançar 1 mês a cada iteração
                 
-                const instDate = new Date(y, m - 1 + i, d);
+                // Correção de Data: Garante que o dia seja respeitado e não pule meses (ex: 31/01 -> 28/02)
+                let targetYear = y;
+                let targetMonth = m - 1 + i; // m é 1-based no split, 0-based no Date
+                
+                // Ajusta ano se passar de dezembro
+                targetYear += Math.floor(targetMonth / 12);
+                targetMonth = targetMonth % 12;
+
+                // Cria data no dia 1 para evitar overflow de dias (ex: 31/02)
+                const instDate = new Date(targetYear, targetMonth, 1);
+                
+                // Tenta setar o dia original. Se o mês não tiver esse dia (ex: 30/02), pega o último dia do mês.
+                const daysInMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+                instDate.setDate(Math.min(d, daysInMonth));
+
                 const dateString = instDate.toISOString().split('T')[0];
                 
                 // Verifica status
