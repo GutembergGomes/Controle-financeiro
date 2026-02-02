@@ -18,7 +18,7 @@
     <script type="importmap">
       {
         "imports": {
-          "@google/generative-ai": "https://esm.run/@google/generative-ai"
+          "@google/generative-ai": "https://esm.run/@google/generative-ai@0.12.0"
         }
       }
     </script>
@@ -26,40 +26,65 @@
       import { GoogleGenerativeAI } from "@google/generative-ai";
 
       window.processWithGemini = async function(text, apiKey) {
-        try {
-            const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash"});
+        const genAI = new GoogleGenerativeAI(apiKey);
+        
+        // Função auxiliar para tentar gerar conteúdo com um modelo
+        const tryGenerate = async (modelName) => {
+            try {
+                const model = genAI.getGenerativeModel({ model: modelName });
+                const prompt = `
+                Analise o seguinte texto extraído de um documento financeiro (extrato, recibo ou planilha) e extraia as transações.
+                Retorne APENAS um array JSON válido (sem markdown, sem \`\`\`).
+                
+                Formato do objeto JSON:
+                {
+                    "description": "Descrição curta e clara da transação",
+                    "amount": 0.00 (número positivo, float),
+                    "type": "expense" ou "income" (baseado no contexto, negativo é expense),
+                    "date": "YYYY-MM-DD" (se não tiver ano, assuma o ano atual ${new Date().getFullYear()})
+                }
 
-            const prompt = `
-            Analise o seguinte texto extraído de um documento financeiro (extrato, recibo ou planilha) e extraia as transações.
-            Retorne APENAS um array JSON válido (sem markdown, sem \`\`\`).
+                Regras:
+                1. Ignore saldos iniciais/finais, cabeçalhos e lixo de OCR.
+                2. Se houver parcelas (ex: 01/10), adicione na descrição.
+                3. Converta valores para formato numérico (float).
+                
+                Texto para análise:
+                ${text}
+                `;
+
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                return response.text();
+            } catch (error) {
+                console.warn(`Erro com modelo ${modelName}:`, error);
+                return null;
+            }
+        };
+
+        try {
+            // Tenta primeiro com Flash (mais rápido e barato)
+            let textResponse = await tryGenerate("gemini-1.5-flash");
             
-            Formato do objeto JSON:
-            {
-                "description": "Descrição curta e clara da transação",
-                "amount": 0.00 (número positivo, float),
-                "type": "expense" ou "income" (baseado no contexto, negativo é expense),
-                "date": "YYYY-MM-DD" (se não tiver ano, assuma o ano atual ${new Date().getFullYear()})
+            // Se falhar, tenta Flash Latest
+            if (!textResponse) {
+                console.log("Tentando fallback para gemini-1.5-flash-latest...");
+                textResponse = await tryGenerate("gemini-1.5-flash-latest");
             }
 
-            Regras:
-            1. Ignore saldos iniciais/finais, cabeçalhos e lixo de OCR.
-            2. Se houver parcelas (ex: 01/10), adicione na descrição.
-            3. Converta valores para formato numérico (float).
-            
-            Texto para análise:
-            ${text}
-            `;
+            // Se falhar, tenta Pro (fallback final)
+            if (!textResponse) {
+                console.log("Tentando fallback para gemini-pro...");
+                textResponse = await tryGenerate("gemini-pro");
+            }
 
-            const result = await model.generateContent(prompt);
-            const response = await result.response;
-            const textResponse = response.text();
+            if (!textResponse) throw new Error("Todos os modelos Gemini falharam.");
             
             // Limpa markdown se o modelo retornar
             const jsonStr = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
             return JSON.parse(jsonStr);
         } catch (error) {
-            console.error("Erro Gemini:", error);
+            console.error("Erro Fatal Gemini:", error);
             throw error;
         }
       }
