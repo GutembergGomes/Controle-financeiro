@@ -570,7 +570,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tipo</label>
-                        <select id="filterType" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors">
+                        <select id="filterType" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors">
                             <option value="">Todos os tipos</option>
                             <option value="income">Receitas</option>
                             <option value="expense">Despesas</option>
@@ -578,13 +578,13 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Categoria</label>
-                        <select id="filterCategory" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors">
+                        <select id="filterCategory" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors">
                             <option value="">Todas as categorias</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mês/Ano</label>
-                        <input type="month" id="filterMonth" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors">
+                        <input type="month" id="filterMonth" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors">
                     </div>
                     <div class="flex items-end">
                         <button onclick="clearFilters()" class="w-full bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-xl font-semibold transition-colors">
@@ -852,7 +852,7 @@
                         </h3>
                         <p class="text-sm text-gray-600 dark:text-gray-400">Recomendações baseadas no seu perfil</p>
                     </div>
-                    <select id="investProfile" onchange="updateSuggestions()" class="p-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                    <select id="investProfile" onchange="updateSuggestions()" class="p-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
                         <option value="conservador">Perfil Conservador</option>
                         <option value="moderado" selected>Perfil Moderado</option>
                         <option value="arrojado">Perfil Arrojado</option>
@@ -986,15 +986,15 @@
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Valor Inicial (R$)</label>
-                            <input type="text" id="compoundPrincipal" oninput="formatCurrencyInput(this)" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="1.000,00">
+                            <input type="text" id="compoundPrincipal" oninput="formatCurrencyInput(this)" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="1.000,00">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Taxa de Juros (% ao ano)</label>
-                            <input type="number" id="compoundRate" step="0.01" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="12">
+                            <input type="number" id="compoundRate" step="0.01" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="12">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Período (anos)</label>
-                            <input type="number" id="compoundTime" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="5">
+                            <input type="number" id="compoundTime" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="5">
                         </div>
                         <button onclick="calculateCompoundInterest()" class="w-full bg-gradient-to-r from-primary to-secondary text-white py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105">
                             Calcular
@@ -1018,11 +1018,11 @@
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Gastos Mensais (R$)</label>
-                            <input type="text" id="monthlyExpenses" oninput="formatCurrencyInput(this)" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="3.000,00">
+                            <input type="text" id="monthlyExpenses" oninput="formatCurrencyInput(this)" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="3.000,00">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Meses de Cobertura</label>
-                            <select id="emergencyMonths" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                            <select id="emergencyMonths" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
                                 <option value="3">3 meses (Conservador)</option>
                                 <option value="6" selected>6 meses (Recomendado)</option>
                                 <option value="12">12 meses (Muito Seguro)</option>
@@ -1142,7 +1142,7 @@
                         <i class="fas fa-dollar-sign mr-1 text-primary"></i>Valor
                     </label>
                     <input type="text" id="transactionAmount" required oninput="formatCurrencyInput(this)"
-                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                            placeholder="0,00">
                 </div>
                 <div>
@@ -1150,7 +1150,7 @@
                         <i class="fas fa-edit mr-1 text-secondary"></i>Descrição
                     </label>
                     <input type="text" id="transactionDescription" required 
-                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                            placeholder="Descrição da transação">
                 </div>
                 <div>
@@ -1158,7 +1158,7 @@
                         <i class="fas fa-tags mr-1 text-accent"></i>Categoria
                     </label>
                     <select id="transactionCategory" required 
-                            class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                            class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
                     </select>
                 </div>
                 <div>
@@ -1166,14 +1166,14 @@
                         <i class="fas fa-calendar mr-1 text-warning"></i>Data
                     </label>
                     <input type="date" id="transactionDate" required 
-                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                         <i class="fas fa-check-circle mr-1 text-success"></i>Status
                     </label>
                     <select id="transactionStatus" required 
-                            class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                            class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
                         <option value="paid">Pago / Recebido</option>
                         <option value="pending">Pendente</option>
                     </select>
@@ -1183,7 +1183,7 @@
                         <i class="fas fa-credit-card mr-1 text-danger"></i>Vincular a Dívida (Opcional)
                     </label>
                     <select id="transactionDebt" 
-                            class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                            class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
                         <option value="">Selecione uma dívida...</option>
                     </select>
                     <p class="text-xs text-gray-500 mt-1">Ao selecionar, o valor será abatido da dívida.</p>
@@ -1218,7 +1218,7 @@
                         <i class="fas fa-flag mr-1 text-primary"></i>Nome da Meta
                     </label>
                     <input type="text" id="goalName" required 
-                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                            placeholder="Ex: Reserva de Emergência">
                 </div>
                 <div>
@@ -1226,7 +1226,7 @@
                         <i class="fas fa-bullseye mr-1 text-success"></i>Valor Alvo
                     </label>
                     <input type="text" id="goalTarget" required oninput="formatCurrencyInput(this)"
-                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                            placeholder="0,00">
                 </div>
                 <div>
@@ -1234,7 +1234,7 @@
                         <i class="fas fa-calendar-check mr-1 text-warning"></i>Data Limite
                     </label>
                     <input type="date" id="goalDeadline" required 
-                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
                 </div>
                 <div class="flex gap-3 pt-4">
                     <button type="submit" class="flex-1 bg-gradient-to-r from-warning to-yellow-600 hover:from-warning/90 hover:to-yellow-600/90 text-white py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg">
@@ -1266,7 +1266,7 @@
                         <i class="fas fa-font mr-1 text-primary"></i>Nome/Descrição
                     </label>
                     <input type="text" id="debtName" required 
-                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                            placeholder="Ex: TV Magalu, Empréstimo">
                 </div>
                 
@@ -1276,7 +1276,7 @@
                             <i class="fas fa-money-bill mr-1 text-success"></i>Valor À Vista
                         </label>
                         <input type="text" id="debtOriginalAmount" required oninput="formatCurrencyInput(this); calculateDebtInfo()"
-                               class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                               class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                placeholder="0,00">
                     </div>
                     <div>
@@ -1284,7 +1284,7 @@
                             <i class="fas fa-calendar-alt mr-1 text-warning"></i>1ª Parcela
                         </label>
                         <input type="date" id="debtDueDate" required 
-                               class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                               class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
                     </div>
                 </div>
 
@@ -1294,7 +1294,7 @@
                             <i class="fas fa-layer-group mr-1 text-info"></i>Nº Parcelas
                         </label>
                         <input type="number" id="debtTotalInstallments" min="1" required oninput="calculateDebtInfo()"
-                               class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                               class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                placeholder="12">
                     </div>
                     <div>
@@ -1302,7 +1302,7 @@
                             <i class="fas fa-coins mr-1 text-accent"></i>Valor Parcela
                         </label>
                         <input type="text" id="debtInstallmentValue" required oninput="formatCurrencyInput(this); calculateDebtInfo()"
-                               class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                               class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                placeholder="0,00">
                     </div>
                 </div>
@@ -1323,7 +1323,7 @@
                         <i class="fas fa-check-circle mr-1 text-secondary"></i>Parcelas Já Pagas (Anteriores)
                     </label>
                     <input type="number" id="debtPaidInstallments" min="0" value="0"
-                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                            placeholder="0">
                     <p class="text-xs text-gray-500 mt-1">Transações passadas serão geradas como "Pagas".</p>
                 </div>
@@ -1358,7 +1358,7 @@
                         <i class="fas fa-tags mr-1 text-accent"></i>Categoria
                     </label>
                     <select id="budgetCategory" required 
-                            class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                            class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
                     </select>
                 </div>
                 <div>
@@ -1366,7 +1366,7 @@
                         <i class="fas fa-dollar-sign mr-1 text-primary"></i>Valor Mensal
                     </label>
                     <input type="text" id="budgetAmount" required oninput="formatCurrencyInput(this)"
-                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                            placeholder="0,00">
                 </div>
                 <div>
@@ -1374,7 +1374,7 @@
                         <i class="fas fa-calendar mr-1 text-warning"></i>Mês/Ano
                     </label>
                     <input type="month" id="budgetMonth" required 
-                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
                 </div>
                 <div class="flex gap-3 pt-4">
                     <button type="submit" class="flex-1 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg">
@@ -1406,7 +1406,7 @@
                         <i class="fas fa-signature mr-1 text-primary"></i>Nome do Investimento
                     </label>
                     <input type="text" id="investmentName" required 
-                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                            placeholder="Ex: Tesouro Direto">
                 </div>
                 <div>
@@ -1414,7 +1414,7 @@
                         <i class="fas fa-layer-group mr-1 text-secondary"></i>Tipo
                     </label>
                     <select id="investmentType" required 
-                            class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                            class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
                         <option value="">Selecione o tipo</option>
                         <option value="renda-fixa">Renda Fixa</option>
                         <option value="renda-variavel">Renda Variável</option>
@@ -1429,7 +1429,7 @@
                         <i class="fas fa-dollar-sign mr-1 text-success"></i>Valor Investido
                     </label>
                     <input type="text" id="investmentAmount" required oninput="formatCurrencyInput(this)"
-                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                            placeholder="0,00">
                 </div>
                 <div>
@@ -1437,7 +1437,7 @@
                         <i class="fas fa-chart-line mr-1 text-accent"></i>Valor Atual
                     </label>
                     <input type="text" id="investmentCurrentValue" required oninput="formatCurrencyInput(this)"
-                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                            placeholder="0,00">
                 </div>
                 <div>
@@ -1445,7 +1445,7 @@
                         <i class="fas fa-calendar mr-1 text-warning"></i>Data do Investimento
                     </label>
                     <input type="date" id="investmentDate" required 
-                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
                 </div>
                 <div class="flex gap-3 pt-4">
                     <button type="submit" class="flex-1 bg-gradient-to-r from-accent to-emerald-600 hover:from-accent/90 hover:to-emerald-600/90 text-white py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg">
@@ -1534,7 +1534,7 @@
                     <div class="space-y-3">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Moeda</label>
-                            <select id="currencySelect" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                            <select id="currencySelect" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
                                 <option value="BRL">Real Brasileiro (R$)</option>
                                 <option value="USD">Dólar Americano ($)</option>
                                 <option value="EUR">Euro (€)</option>
@@ -1542,7 +1542,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Formato de Data</label>
-                            <select id="dateFormatSelect" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                            <select id="dateFormatSelect" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
                                 <option value="pt-BR">DD/MM/AAAA</option>
                                 <option value="en-US">MM/DD/AAAA</option>
                                 <option value="en-GB">DD/MM/AAAA</option>
@@ -1558,7 +1558,7 @@
                                 <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-primary hover:underline">Gerar Key Grátis</a>
                             </p>
                             <input type="password" id="geminiApiKey" placeholder="Cole sua API Key aqui (começa com AIza...)" 
-                                   class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                                   class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
                         </div>
                     </div>
                 </div>
@@ -2801,11 +2801,46 @@
                 .filter(t => t.type === 'expense' && t.date.startsWith(lastMonth) && t.status !== 'pending')
                 .reduce((sum, t) => sum + t.amount, 0);
                 
-            const totalBalance = appData.transactions
+            let totalBalance = appData.transactions
                 .filter(t => t.status !== 'pending')
                 .reduce((sum, t) => sum + (t.type === 'income' ? t.amount : -t.amount), 0);
-                
-            const monthlySavings = monthlyIncome - monthlyExpenses;
+            
+            // Se não houver renda no mês atual, não exibir saldo negativo (considerar neutro/positivo visualmente se o saldo for negativo)
+            // A pedido do usuário: "o mes que n tiver uma renda do mes n contabilizar negativo no saldo total"
+            // Interpretação: Se monthlyIncome == 0, e o saldo total calculado for negativo devido a despesas acumuladas,
+            // pode ser desmotivador ou incorreto se a renda ainda não caiu.
+            // Mas "saldo total" é acumulado. Talvez ele queira dizer o "Saldo Mensal" (monthlySavings)?
+            // "n contabilizar negativo no saldo total" -> Saldo Total.
+            
+            if (monthlyIncome === 0 && totalBalance < 0) {
+                 // Opção 1: Mostrar o saldo negativo mas talvez ele queira que seja 0?
+                 // O usuário disse "n contabilizar negativo".
+                 // Vamos assumir que ele quer ver 0 ou o valor absoluto? Não, 0 faz mais sentido se ele quer ignorar o negativo.
+                 // Mas vamos ser conservadores: Se não tem renda no MÊS ATUAL, talvez ele esteja começando ou não lançou.
+                 // Vamos alterar a visualização do monthlySavings também?
+            }
+
+            // CORREÇÃO DIRETA DO PEDIDO:
+            // "o mes que n tiver uma renda do mes n contabilizar negativo no saldo total"
+            // Se monthlyIncome == 0, o totalBalance não deve ficar negativo (visual apenas?)
+            
+            // Vamos aplicar a regra: Se (monthlyIncome === 0 && totalBalance < 0) -> totalBalance = 0 ?
+            // Ou será que ele fala do Monthly Savings?
+            // "saldo total" geralmente é o acumulado.
+            // Vou aplicar no Total Balance se monthlyIncome == 0.
+            
+            if (monthlyIncome === 0 && totalBalance < 0) {
+                totalBalance = 0; 
+            }
+            
+            let monthlySavings = monthlyIncome - monthlyExpenses;
+            
+            // Aplicar mesma lógica para o Saldo Mensal? "saldo total" pode ser o saldo do mês.
+            // Se eu gastei 500 e ganhei 0, meu saldo do mês é -500.
+            // Se ele não quer ver negativo:
+            if (monthlyIncome === 0 && monthlySavings < 0) {
+                monthlySavings = 0;
+            }
             const savingsRate = monthlyIncome > 0 ? (monthlySavings / monthlyIncome * 100) : 0;
 
             const incomeChange = lastMonthIncome > 0 ? ((monthlyIncome - lastMonthIncome) / lastMonthIncome * 100) : 0;
@@ -3447,7 +3482,7 @@
                         ${!isCompleted ? `
                             <div class="flex gap-2">
                                 <input type="text" placeholder="Valor" oninput="formatCurrencyInput(this)"
-                                       class="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                       class="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                        id="goalInput${goal.id}">
                                 <button onclick="updateGoal(${goal.id}, parseCurrencyInput(document.getElementById('goalInput${goal.id}').value) || 0)"
                                         class="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105">
@@ -3550,7 +3585,7 @@
                             </div>
                             <div class="flex gap-2">
                                 <input type="text" placeholder="Novo valor" oninput="formatCurrencyInput(this)"
-                                       class="w-24 p-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                       class="w-24 p-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                        id="investmentInput${investment.id}">
                                 <button onclick="updateInvestment(${investment.id}, parseCurrencyInput(document.getElementById('investmentInput${investment.id}').value) || 0)"
                                         class="bg-gradient-to-r from-accent to-emerald-600 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-300 transform hover:scale-105">
