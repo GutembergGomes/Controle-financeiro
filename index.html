@@ -1592,8 +1592,8 @@
 
             // Tenta adivinhar se é uma transação válida
             parseText: async function(text) {
-                // VERIFICA SE TEM API KEY DO GEMINI CONFIGURADA
-                const apiKey = localStorage.getItem('geminiApiKey');
+                // VERIFICA SE TEM API KEY DO GEMINI CONFIGURADA (Prioriza localStorage, senão usa Default do código)
+                const apiKey = localStorage.getItem('geminiApiKey') || "AIzaSyDNJYeFWmGzcGo5AtRDwNf5uqzKRIHHEvE";
                 
                 if (apiKey && window.processWithGemini) {
                     try {
@@ -1936,8 +1936,13 @@
                 this.storageKey = 'financeControlPro';
                 this.isLocalStorageAvailable = this.checkLocalStorage();
                 
-                // Load Gemini Key if exists
-                const geminiKey = localStorage.getItem('geminiApiKey');
+                // Load Gemini Key if exists or use default from code
+                let geminiKey = localStorage.getItem('geminiApiKey');
+                if (!geminiKey) {
+                    geminiKey = "AIzaSyDNJYeFWmGzcGo5AtRDwNf5uqzKRIHHEvE";
+                    try { localStorage.setItem('geminiApiKey', geminiKey); } catch(e){}
+                }
+
                 if(geminiKey) {
                     setTimeout(() => {
                         const input = document.getElementById('geminiApiKey');
