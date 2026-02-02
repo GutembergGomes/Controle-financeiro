@@ -2847,43 +2847,33 @@
                 .filter(t => t.type === 'expense' && t.date.startsWith(lastMonth) && t.status !== 'pending')
                 .reduce((sum, t) => sum + t.amount, 0);
                 
-            let totalBalance = appData.transactions
-                .filter(t => t.status !== 'pending')
-                .reduce((sum, t) => sum + (t.type === 'income' ? t.amount : -t.amount), 0);
+            // Lógica solicitada: "so contabilizar o saldo o mes que for lançado renda"
+            // Ignora despesas de meses onde não houve entrada de dinheiro (ex: dívidas antigas ou meses sem salário lançado)
             
-            // Se não houver renda no mês atual, não exibir saldo negativo (considerar neutro/positivo visualmente se o saldo for negativo)
-            // A pedido do usuário: "o mes que n tiver uma renda do mes n contabilizar negativo no saldo total"
-            // Interpretação: Se monthlyIncome == 0, e o saldo total calculado for negativo devido a despesas acumuladas,
-            // pode ser desmotivador ou incorreto se a renda ainda não caiu.
-            // Mas "saldo total" é acumulado. Talvez ele queira dizer o "Saldo Mensal" (monthlySavings)?
-            // "n contabilizar negativo no saldo total" -> Saldo Total.
-            
-            if (monthlyIncome === 0 && totalBalance < 0) {
-                 // Opção 1: Mostrar o saldo negativo mas talvez ele queira que seja 0?
-                 // O usuário disse "n contabilizar negativo".
-                 // Vamos assumir que ele quer ver 0 ou o valor absoluto? Não, 0 faz mais sentido se ele quer ignorar o negativo.
-                 // Mas vamos ser conservadores: Se não tem renda no MÊS ATUAL, talvez ele esteja começando ou não lançou.
-                 // Vamos alterar a visualização do monthlySavings também?
-            }
+            const transactionsByMonth = {};
+            appData.transactions.forEach(t => {
+                if (t.status === 'pending') return;
+                const monthKey = t.date.slice(0, 7); // YYYY-MM
+                if (!transactionsByMonth[monthKey]) {
+                    transactionsByMonth[monthKey] = { income: 0, expense: 0 };
+                }
+                if (t.type === 'income') {
+                    transactionsByMonth[monthKey].income += t.amount;
+                } else {
+                    transactionsByMonth[monthKey].expense += t.amount;
+                }
+            });
 
-            // CORREÇÃO DIRETA DO PEDIDO:
-            // "o mes que n tiver uma renda do mes n contabilizar negativo no saldo total"
-            // Se monthlyIncome == 0, o totalBalance não deve ficar negativo (visual apenas?)
-            
-            // Vamos aplicar a regra: Se (monthlyIncome === 0 && totalBalance < 0) -> totalBalance = 0 ?
-            // Ou será que ele fala do Monthly Savings?
-            // "saldo total" geralmente é o acumulado.
-            // Vou aplicar no Total Balance se monthlyIncome == 0.
-            
-            if (monthlyIncome === 0 && totalBalance < 0) {
-                totalBalance = 0; 
-            }
+            let totalBalance = 0;
+            Object.values(transactionsByMonth).forEach(monthData => {
+                if (monthData.income > 0) {
+                    totalBalance += (monthData.income - monthData.expense);
+                }
+            });
             
             let monthlySavings = monthlyIncome - monthlyExpenses;
             
-            // Aplicar mesma lógica para o Saldo Mensal? "saldo total" pode ser o saldo do mês.
-            // Se eu gastei 500 e ganhei 0, meu saldo do mês é -500.
-            // Se ele não quer ver negativo:
+            // Se não houver renda, não mostrar economia negativa
             if (monthlyIncome === 0 && monthlySavings < 0) {
                 monthlySavings = 0;
             }
