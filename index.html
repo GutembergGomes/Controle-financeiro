@@ -49,6 +49,8 @@
                 1. Ignore saldos e lixo.
                 2. Identifique parcelamentos (ex: "10X", "01/10").
                 3. Se encontrar "Valor da Parcela" ou tabela com "Vezes", assuma que o amount é o valor MENSAL.
+                4. IGNORAR linhas de totais ou subtotais (ex: "Total", "Soma", "Parcela Mensal Total").
+                5. Certifique-se de capturar TODAS as linhas da tabela, incluindo financiamentos e empréstimos.
                 
                 Texto para análise:
                 ${text}
@@ -1622,6 +1624,13 @@
                 lines.forEach(line => {
                     // Ignora linhas muito curtas
                     if (line.length < 5) return; 
+
+                    // Ignora linhas de TOTAL, SOMA ou SALDO (para evitar duplicidade com o rodapé)
+                    if (line.toUpperCase().includes('TOTAL') || 
+                        line.toUpperCase().includes('SOMA') || 
+                        line.toUpperCase().includes('SALDO')) {
+                        return;
+                    }
 
                     // Busca data
                     const dateMatch = line.match(this.patterns.date);
