@@ -33,22 +33,22 @@
             try {
                 const model = genAI.getGenerativeModel({ model: modelName });
                 const prompt = `
-                Analise o seguinte texto extraído de um documento financeiro (extrato, recibo ou planilha) e extraia as transações.
+                Analise o seguinte texto extraído de um documento financeiro (extrato, recibo ou planilha) e extraia as transações ou dívidas.
                 Retorne APENAS um array JSON válido (sem markdown, sem \`\`\`).
                 
                 Formato do objeto JSON:
                 {
-                    "description": "Descrição curta e clara da transação",
-                    "amount": 0.00 (número positivo, float),
-                    "type": "expense" ou "income" (baseado no contexto, negativo é expense),
-                    "date": "YYYY-MM-DD" (se não tiver data explícita, use a data de hoje: ${new Date().toISOString().split('T')[0]})
+                    "description": "Descrição curta e clara",
+                    "amount": 0.00 (número positivo, float. SE FOR PARCELADO, É O VALOR DA PARCELA),
+                    "type": "expense" ou "income" (negativo é expense),
+                    "date": "YYYY-MM-DD" (se não tiver data, use ${new Date().toISOString().split('T')[0]}),
+                    "installments": 1 (número de parcelas. Se for "20X" ou "1/20", retorne 20. Se não tiver, 1)
                 }
 
                 Regras:
-                1. Ignore saldos iniciais/finais, cabeçalhos e lixo de OCR.
-                2. Se houver parcelas (ex: 01/10 ou 20X), adicione na descrição.
-                3. Converta valores para formato numérico (float).
-                4. SE NÃO TIVER DATA NA LINHA, USE A DATA DE HOJE.
+                1. Ignore saldos e lixo.
+                2. Identifique parcelamentos (ex: "10X", "01/10").
+                3. Se encontrar "Valor da Parcela" ou tabela com "Vezes", assuma que o amount é o valor MENSAL.
                 
                 Texto para análise:
                 ${text}
@@ -1265,34 +1265,67 @@
                     </label>
                     <input type="text" id="debtName" required 
                            class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                           placeholder="Ex: Cartão Visa, Financiamento Carro">
+                           placeholder="Ex: TV Magalu, Empréstimo">
                 </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        <i class="fas fa-money-bill-wave mr-1 text-success"></i>Valor Total
-                    </label>
-                    <input type="text" id="debtTotalAmount" required oninput="formatCurrencyInput(this)"
-                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                           placeholder="0,00">
-                </div>
+                
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                            <i class="fas fa-layer-group mr-1 text-warning"></i>Total Parcelas
+                            <i class="fas fa-money-bill mr-1 text-success"></i>Valor À Vista
                         </label>
-                        <input type="number" id="debtTotalInstallments" min="1" required 
+                        <input type="text" id="debtOriginalAmount" required oninput="formatCurrencyInput(this); calculateDebtInfo()"
+                               class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                               placeholder="0,00">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            <i class="fas fa-calendar-alt mr-1 text-warning"></i>1ª Parcela
+                        </label>
+                        <input type="date" id="debtDueDate" required 
+                               class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            <i class="fas fa-layer-group mr-1 text-info"></i>Nº Parcelas
+                        </label>
+                        <input type="number" id="debtTotalInstallments" min="1" required oninput="calculateDebtInfo()"
                                class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                placeholder="12">
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                            <i class="fas fa-check-circle mr-1 text-info"></i>Pagas
+                            <i class="fas fa-coins mr-1 text-accent"></i>Valor Parcela
                         </label>
-                        <input type="number" id="debtPaidInstallments" min="0" required 
+                        <input type="text" id="debtInstallmentValue" required oninput="formatCurrencyInput(this); calculateDebtInfo()"
                                class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                               placeholder="0">
+                               placeholder="0,00">
                     </div>
                 </div>
+
+                <div id="debtCalculationInfo" class="hidden p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-100 dark:border-gray-600">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-gray-600 dark:text-gray-400">Total Final:</span>
+                        <span id="calcTotalDebt" class="font-bold text-gray-800 dark:text-white">R$ 0,00</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Juros Estimados:</span>
+                        <span id="calcInterest" class="font-bold text-danger">R$ 0,00</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <i class="fas fa-check-circle mr-1 text-secondary"></i>Parcelas Já Pagas (Anteriores)
+                    </label>
+                    <input type="number" id="debtPaidInstallments" min="0" value="0"
+                           class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                           placeholder="0">
+                    <p class="text-xs text-gray-500 mt-1">Transações passadas serão geradas como "Pagas".</p>
+                </div>
+
                 <div class="flex gap-3 pt-4">
                     <button type="submit" class="flex-1 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg">
                         <i class="fas fa-save mr-2"></i>Salvar
@@ -1473,6 +1506,27 @@
 
                 <div>
                     <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">
+                        <i class="fas fa-database mr-2 text-accent"></i>Backup e Restauração
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <button onclick="exportData()" 
+                                class="flex items-center justify-center p-4 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all group">
+                            <i class="fas fa-download text-xl text-blue-600 mr-3 group-hover:scale-110 transition-transform"></i>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Exportar Backup (JSON)</span>
+                        </button>
+                        <button onclick="document.getElementById('importBackup').click()" 
+                                class="flex items-center justify-center p-4 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all group">
+                            <i class="fas fa-upload text-xl text-orange-600 mr-3 group-hover:scale-110 transition-transform"></i>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Restaurar Backup</span>
+                        </button>
+                        <input type="file" id="importBackup" accept=".json" class="hidden" onchange="importData(this)">
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-200 dark:border-gray-700 my-4"></div>
+
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">
                         <i class="fas fa-sliders-h mr-2 text-accent"></i>Preferências
                     </h4>
                     <div class="space-y-3">
@@ -1530,7 +1584,8 @@
             patterns: {
                 date: /(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/g,
                 money: /(?:R\$\s*)?([\d\.]+,\d{2})/g, // Formato PT-BR 1.000,00
-                moneyUS: /(?:\$\s*)?([\d,]+\.\d{2})/g // Formato US 1,000.00
+                moneyUS: /(?:\$\s*)?([\d,]+\.\d{2})/g, // Formato US 1,000.00
+                installments: /(\d+)\s*[xX]/ // Padrão para parcelas (ex: 10x)
             },
 
             // Tenta adivinhar se é uma transação válida
@@ -1551,7 +1606,8 @@
                             type: t.type === 'expense' ? 'expense' : 'income',
                             category: 'Outros',
                             date: t.date,
-                            status: 'paid'
+                            status: 'paid',
+                            installments: t.installments || 1
                         }));
                     } catch (e) {
                         console.error("Falha no Gemini, usando fallback regex", e);
@@ -1565,18 +1621,25 @@
                 
                 lines.forEach(line => {
                     // Ignora linhas muito curtas
-                    if (line.length < 5) return; // Relaxado de 10 para 5
+                    if (line.length < 5) return; 
 
                     // Busca data
                     const dateMatch = line.match(this.patterns.date);
                     // Busca valor
                     const moneyMatch = line.match(this.patterns.money) || line.match(this.patterns.moneyUS);
+                    // Busca parcelas
+                    const installmentMatch = line.match(this.patterns.installments);
+                    let installments = 1;
+                    if (installmentMatch) {
+                        installments = parseInt(installmentMatch[1]);
+                    }
 
-                    if (moneyMatch) { // Data agora é opcional
+                    if (moneyMatch) { 
                         // Tenta extrair a descrição (texto que não é data nem valor)
                         let description = line
                             .replace(this.patterns.money, '')
                             .replace(this.patterns.moneyUS, '')
+                            .replace(this.patterns.installments, '')
                             .trim()
                             .replace(/[^\w\s\u00C0-\u00FF]/g, '') // Remove caracteres especiais
                             .replace(/\s+/g, ' '); // Remove espaços duplos
@@ -1585,7 +1648,7 @@
                             description = description.replace(this.patterns.date, '').trim();
                         }
 
-                        if (description.length > 2) { // Relaxado de 3 para 2
+                        if (description.length > 2) { 
                             // Formata data para YYYY-MM-DD
                             let formattedDate;
                             if (dateMatch) {
@@ -1610,19 +1673,15 @@
                                 amount = parseFloat(amountStr.replace(/,/g, ''));
                             }
 
-                            // Determina tipo (se tiver sinal de menos é despesa)
-                            // Para listas simples sem sinal, assume despesa se tiver "Parcela" ou similar, ou Income padrão?
-                            // Melhor assumir Expense por padrão para listas de compras/dívidas
-                            const type = 'expense'; // Default safe assumption for import lists usually
-
                             transactions.push({
                                 id: Date.now() + Math.random(),
                                 description: description || 'Item Importado',
                                 amount: Math.abs(amount),
-                                type: type,
-                                category: 'Outros', // Categoria padrão
+                                type: 'expense',
+                                category: 'Outros', 
                                 date: formattedDate,
-                                status: 'paid'
+                                status: 'paid',
+                                installments: installments
                             });
                         }
                     }
@@ -1721,29 +1780,145 @@
                 return;
             }
 
-            // Filtra duplicatas (básico: mesma data, valor e descrição)
-            const newTransactions = transactions.filter(newT => {
-                return !appData.transactions.some(existingT => 
-                    existingT.date === newT.date && 
-                    existingT.amount === newT.amount &&
-                    existingT.description === newT.description
-                );
+            let newDebtsCount = 0;
+            let newTransCount = 0;
+
+            transactions.forEach(t => {
+                // SE TIVER MAIS DE 1 PARCELA, É DÍVIDA
+                if (t.installments && t.installments > 1) {
+                    const installmentValue = t.amount;
+                    const totalAmount = installmentValue * t.installments; // Valor da Parcela * Vezes
+                    
+                    const newDebt = {
+                        id: Date.now() + Math.random(),
+                        name: t.description,
+                        originalAmount: totalAmount, // Assume sem juros no import
+                        totalAmount: totalAmount,
+                        totalInstallments: t.installments,
+                        paidInstallments: 0,
+                        paidAmount: 0,
+                        installmentValue: installmentValue,
+                        dueDate: t.date,
+                        date: t.date
+                    };
+
+                    // Verifica duplicidade em dívidas
+                    if (!appData.debts) appData.debts = [];
+                    const isDuplicate = appData.debts.some(d => d.name === newDebt.name && Math.abs(d.totalAmount - newDebt.totalAmount) < 0.01);
+                    
+                    if (!isDuplicate) {
+                        appData.debts.push(newDebt);
+                        newDebtsCount++;
+
+                        // Gerar transações das parcelas para a dívida importada
+                        const [y, m, d] = t.date.split('-').map(Number);
+                        for (let i = 0; i < t.installments; i++) {
+                            const instDate = new Date(y, m - 1 + i, d);
+                            const dateString = instDate.toISOString().split('T')[0];
+                            
+                            appData.transactions.unshift({
+                                id: Date.now() + i + Math.random(),
+                                description: `${t.description} (${i+1}/${t.installments})`,
+                                amount: installmentValue,
+                                type: 'expense',
+                                category: 'Dívidas',
+                                date: dateString,
+                                status: 'pending',
+                                debtId: newDebt.id
+                            });
+                        }
+                    }
+
+                } else {
+                    // Transação Comum
+                    const isDuplicate = appData.transactions.some(existingT => 
+                        existingT.date === t.date && 
+                        Math.abs(existingT.amount - t.amount) < 0.01 &&
+                        existingT.description === t.description
+                    );
+
+                    if (!isDuplicate) {
+                        // Remove campo installments antes de salvar transação comum
+                        delete t.installments;
+                        appData.transactions.unshift(t);
+                        newTransCount++;
+                    }
+                }
             });
 
-            if (newTransactions.length === 0) {
-                showNotification('Todas as transações já foram importadas anteriormente.', 'info');
+            if (newDebtsCount === 0 && newTransCount === 0) {
+                showNotification('Nenhum dado novo importado.', 'info');
                 return;
             }
 
-            // Adiciona ao appData
-            appData.transactions.push(...newTransactions);
             saveData();
-            updateAllDisplays();
+            updateAllDisplays(); // Vai atualizar dívidas e transações
             closeSettingsModal();
             
-            showNotification(`${newTransactions.length} transações importadas com sucesso!`, 'success');
+            let msg = '';
+            if (newTransCount > 0) msg += `${newTransCount} transações `;
+            if (newDebtsCount > 0) msg += `${newTransCount > 0 ? 'e ' : ''}${newDebtsCount} dívidas `;
+            msg += 'importadas com sucesso!';
             
-            // Mostra resumo visual (opcional, por enquanto só notificação)
+            showNotification(msg, 'success');
+        }
+
+        function exportData() {
+            try {
+                const dataStr = JSON.stringify(appData, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                
+                const exportFileDefaultName = `financeiro_backup_${new Date().toISOString().slice(0,10)}.json`;
+                
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+                
+                showNotification('Backup exportado com sucesso!', 'success');
+            } catch (e) {
+                console.error(e);
+                showNotification('Erro ao exportar backup', 'error');
+            }
+        }
+
+        function importData(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const json = JSON.parse(e.target.result);
+                    
+                    // Validação básica
+                    if (!json.transactions && !json.debts && !json.cards) {
+                        throw new Error("Formato de arquivo inválido. O arquivo JSON deve conter transactions, debts ou cards.");
+                    }
+
+                    if (confirm('ATENÇÃO: A importação irá SUBSTITUIR TODOS os dados atuais.\n\nRecomendamos exportar um backup antes de continuar.\n\nDeseja realmente substituir os dados atuais pelos do arquivo?')) {
+                        // Mescla com estrutura padrão para garantir compatibilidade
+                        appData = dataManager.validateAndMergeData(json);
+
+                        saveData();
+                        updateAllDisplays();
+                        
+                        // Atualiza configurações visuais se necessário
+                        if (appData.settings && appData.settings.currency) {
+                            const currencySelect = document.getElementById('currencySelect');
+                            if (currencySelect) currencySelect.value = appData.settings.currency;
+                        }
+                        
+                        showNotification('Dados restaurados com sucesso!', 'success');
+                        closeSettingsModal();
+                    }
+                } catch (error) {
+                    console.error(error);
+                    showNotification('Erro ao restaurar backup: Arquivo inválido', 'error');
+                }
+            };
+            reader.readAsText(file);
+            input.value = ''; // Reset input
         }
 
         // --- SISTEMA DE PERSISTÊNCIA ROBUSTO ---
@@ -2939,37 +3114,113 @@
             document.getElementById('debtForm').reset();
         }
 
+        function calculateDebtInfo() {
+            const originalAmount = parseCurrencyInput(document.getElementById('debtOriginalAmount').value);
+            const installments = parseInt(document.getElementById('debtTotalInstallments').value) || 0;
+            const installmentValue = parseCurrencyInput(document.getElementById('debtInstallmentValue').value);
+            
+            const infoDiv = document.getElementById('debtCalculationInfo');
+            
+            if (installments > 0 && installmentValue > 0) {
+                const totalFinal = installments * installmentValue;
+                const interest = totalFinal - originalAmount;
+                
+                document.getElementById('calcTotalDebt').textContent = formatCurrency(totalFinal);
+                
+                const interestEl = document.getElementById('calcInterest');
+                interestEl.textContent = formatCurrency(interest);
+                
+                if (interest > 0) {
+                    interestEl.classList.remove('text-success');
+                    interestEl.classList.add('text-danger');
+                    interestEl.textContent = `+ ${formatCurrency(interest)} (${((interest/originalAmount)*100).toFixed(1)}%)`;
+                } else if (interest < 0) {
+                    interestEl.classList.remove('text-danger');
+                    interestEl.classList.add('text-success'); // Desconto?
+                    interestEl.textContent = formatCurrency(interest);
+                } else {
+                    interestEl.classList.remove('text-danger');
+                    interestEl.classList.add('text-gray-500');
+                    interestEl.textContent = 'Sem juros';
+                }
+                
+                infoDiv.classList.remove('hidden');
+            } else {
+                infoDiv.classList.add('hidden');
+            }
+        }
+
         function handleDebtSubmit(e) {
             e.preventDefault();
             
             const name = document.getElementById('debtName').value;
-            const totalAmount = parseCurrencyInput(document.getElementById('debtTotalAmount').value);
+            const originalAmount = parseCurrencyInput(document.getElementById('debtOriginalAmount').value);
             const totalInstallments = parseInt(document.getElementById('debtTotalInstallments').value);
-            const paidInstallments = parseInt(document.getElementById('debtPaidInstallments').value);
+            const installmentValue = parseCurrencyInput(document.getElementById('debtInstallmentValue').value);
+            const paidInstallments = parseInt(document.getElementById('debtPaidInstallments').value) || 0;
+            const dueDateStr = document.getElementById('debtDueDate').value;
             
-            if (!name || isNaN(totalAmount) || isNaN(totalInstallments)) {
+            if (!name || isNaN(originalAmount) || isNaN(totalInstallments) || isNaN(installmentValue) || !dueDateStr) {
                 showNotification('Preencha todos os campos obrigatórios!', 'error');
                 return;
             }
             
+            const totalAmount = totalInstallments * installmentValue;
+            const debtId = Date.now();
+            
             const debt = {
-                id: Date.now(),
+                id: debtId,
                 name,
-                totalAmount,
+                originalAmount, // Valor à vista
+                totalAmount, // Valor final (com juros)
                 totalInstallments,
                 paidInstallments,
-                paidAmount: (totalAmount / totalInstallments) * paidInstallments,
+                paidAmount: installmentValue * paidInstallments,
+                installmentValue: installmentValue,
+                dueDate: dueDateStr,
                 date: new Date().toISOString()
             };
             
             if (!appData.debts) appData.debts = [];
             appData.debts.push(debt);
+
+            // GERAR TRANSAÇÕES AUTOMÁTICAS
+            // Data base para cálculo (dia do vencimento)
+            // Divide ano, mes, dia para evitar problemas de fuso horário com Date()
+            const [y, m, d] = dueDateStr.split('-').map(Number);
+            
+            for (let i = 0; i < totalInstallments; i++) {
+                // Se a parcela já foi paga (marcada no form), gera como paid
+                // Se não, gera como pending
+                // A data deve avançar 1 mês a cada iteração
+                
+                const instDate = new Date(y, m - 1 + i, d);
+                const dateString = instDate.toISOString().split('T')[0];
+                
+                // Verifica status
+                const status = i < paidInstallments ? 'paid' : 'pending';
+                
+                const transaction = {
+                    id: Date.now() + i + Math.random(),
+                    description: `${name} (${i+1}/${totalInstallments})`,
+                    amount: installmentValue,
+                    type: 'expense',
+                    category: 'Dívidas',
+                    date: dateString,
+                    status: status,
+                    debtId: debtId
+                };
+                
+                appData.transactions.unshift(transaction);
+            }
+
             saveData();
             
             closeDebtModal();
             updateDebtStats();
             renderDebts();
-            showNotification('Dívida cadastrada com sucesso!', 'success');
+            updateAllDisplays(); // Para atualizar lista de transações
+            showNotification('Dívida e parcelas geradas com sucesso!', 'success');
         }
 
         function deleteDebt(id) {
@@ -3027,8 +3278,20 @@
             container.innerHTML = appData.debts.map(debt => {
                 const progress = (debt.paidInstallments / debt.totalInstallments) * 100;
                 const remainingAmount = debt.totalAmount - debt.paidAmount;
-                const installmentValue = debt.totalAmount / debt.totalInstallments;
+                const installmentValue = debt.installmentValue || (debt.totalAmount / debt.totalInstallments);
                 
+                // Calcula Juros
+                const interest = debt.originalAmount ? (debt.totalAmount - debt.originalAmount) : 0;
+                const hasInterest = interest > 0.01;
+
+                // Data de vencimento (dia)
+                let dueDay = 'N/A';
+                if (debt.dueDate) {
+                    const d = new Date(debt.dueDate); // This might be UTC/Local dependent but usually safe for just day extraction if not crossing midnight too much
+                    // Actually, simpler:
+                    dueDay = debt.dueDate.split('-')[2];
+                }
+
                 return `
                     <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
                         <div class="flex justify-between items-start mb-4">
@@ -3036,6 +3299,7 @@
                                 <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-1">${debt.name}</h3>
                                 <p class="text-sm text-gray-500 dark:text-gray-400">
                                     ${debt.paidInstallments}/${debt.totalInstallments} Parcelas
+                                    ${debt.dueDate ? `<span class="ml-2 text-xs bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">Dia ${dueDay}</span>` : ''}
                                 </p>
                             </div>
                             <button onclick="deleteDebt(${debt.id})" class="text-gray-400 hover:text-danger transition-colors p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
@@ -3063,6 +3327,12 @@
                                 <p class="text-xs text-gray-500 dark:text-gray-400">Restante</p>
                                 <p class="font-bold text-danger">${formatCurrency(remainingAmount)}</p>
                             </div>
+                            ${hasInterest ? `
+                            <div class="col-span-2 pt-2 border-t border-gray-200 dark:border-gray-600 flex justify-between items-center">
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Juros Totais</p>
+                                <p class="text-xs font-bold text-danger">+ ${formatCurrency(interest)}</p>
+                            </div>
+                            ` : ''}
                         </div>
                     </div>
                 `;
