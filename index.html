@@ -3855,15 +3855,20 @@
 
         function updateRecentTransactions() {
             const container = document.getElementById('recentTransactions');
+            
+            // Get current month (YYYY-MM)
+            const currentMonth = new Date().toISOString().slice(0, 7);
+            
+            // Filter by current month and sort by date
             const recentTransactions = appData.transactions
-                .sort((a, b) => new Date(b.date) - new Date(a.date))
-                .slice(0, 5);
+                .filter(t => t.date.startsWith(currentMonth))
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
 
             if (recentTransactions.length === 0) {
                 container.innerHTML = `
                     <div class="text-center py-8 text-gray-500 dark:text-gray-400">
                         <i class="fas fa-inbox text-3xl mb-3"></i>
-                        <p class="text-sm">Nenhuma transação recente</p>
+                        <p class="text-sm">Nenhuma transação neste mês</p>
                     </div>
                 `;
                 return;
