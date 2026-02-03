@@ -3856,8 +3856,11 @@
         function updateRecentTransactions() {
             const container = document.getElementById('recentTransactions');
             
-            // Get current month (YYYY-MM)
-            const currentMonth = new Date().toISOString().slice(0, 7);
+            // Get current month (YYYY-MM) using local time to avoid timezone issues
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const currentMonth = `${year}-${month}`;
             
             // Filter by current month and sort by date
             const recentTransactions = appData.transactions
