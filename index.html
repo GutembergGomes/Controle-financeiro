@@ -2971,13 +2971,6 @@
             document.getElementById('expenseChange').textContent = `${expenseChange >= 0 ? '+' : ''}${expenseChange.toFixed(1)}%`;
             document.getElementById('savingsRate').textContent = `${savingsRate.toFixed(1)}%`;
 
-            // Total Investments
-            const totalInvestments = appData.investments ? appData.investments.reduce((sum, inv) => sum + (Number(inv.currentValue) || 0), 0) : 0;
-            const totalInvestmentsEl = document.getElementById('totalInvestmentsDash');
-            if (totalInvestmentsEl) {
-                totalInvestmentsEl.textContent = formatCurrency(totalInvestments);
-            }
-
             // Expense Ratio
             const expenseRatio = monthlyIncome > 0 ? (monthlyExpenses / monthlyIncome * 100) : 0;
             const expenseRatioEl = document.getElementById('expenseRatio');
