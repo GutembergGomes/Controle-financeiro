@@ -924,6 +924,27 @@
                 </div>
             </div>
 
+            <!-- Portfolio Allocation Chart -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
+                    <h3 class="text-xl font-bold mb-6 text-gray-800 dark:text-white">
+                        <i class="fas fa-chart-pie mr-2 text-primary"></i>Alocação da Carteira
+                    </h3>
+                    <div class="h-64">
+                        <canvas id="allocationChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
+                    <h3 class="text-xl font-bold mb-6 text-gray-800 dark:text-white">
+                        <i class="fas fa-chart-bar mr-2 text-secondary"></i>Evolução Patrimonial
+                    </h3>
+                    <div class="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400 text-center">
+                        <p>Adicione mais dados históricos para visualizar a evolução.</p>
+                        <!-- Placeholder for future Evolution Chart -->
+                    </div>
+                </div>
+            </div>
+
             <!-- Investments List -->
             <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
                 <h3 class="text-xl font-bold mb-6 text-gray-800 dark:text-white">
@@ -3564,7 +3585,16 @@
         function renderInvestments() {
             const container = document.getElementById('investmentsList');
 
+            // Render Allocation Chart whenever investments are rendered
+            renderAllocationChart();
+
             if (appData.investments.length === 0) {
+                // If no investments, clear chart if exists
+                if (charts.allocation) {
+                    charts.allocation.destroy();
+                    charts.allocation = null;
+                }
+                
                 container.innerHTML = `
                     <div class="text-center py-12 text-gray-500 dark:text-gray-400">
                         <div class="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-accent/20 to-emerald-500/20 rounded-full flex items-center justify-center">
@@ -3657,6 +3687,97 @@
                     </div>
                 `;
             }).join('');
+        }
+
+        function renderAllocationChart() {
+            const ctx = document.getElementById('allocationChart');
+            if (!ctx) return;
+
+            // Destroy existing chart if it exists
+            if (charts.allocation) {
+                charts.allocation.destroy();
+                charts.allocation = null;
+            }
+
+            // Group data
+            const allocation = {};
+            let totalValue = 0;
+
+            appData.investments.forEach(inv => {
+                if (!allocation[inv.type]) {
+                    allocation[inv.type] = 0;
+                }
+                allocation[inv.type] += inv.currentValue;
+                totalValue += inv.currentValue;
+            });
+
+            if (totalValue === 0) return;
+
+            const labels = Object.keys(allocation).map(type => {
+                const map = {
+                    'renda-fixa': 'Renda Fixa',
+                    'renda-variavel': 'Ações',
+                    'fundo': 'FIIs',
+                    'cripto': 'Cripto',
+                    'imovel': 'Imóveis',
+                    'outros': 'Outros'
+                };
+                return map[type] || type;
+            });
+
+            const data = Object.values(allocation);
+            const colors = Object.keys(allocation).map(type => {
+                const map = {
+                    'renda-fixa': '#3b82f6', // blue-500
+                    'renda-variavel': '#a855f7', // purple-500
+                    'fundo': '#22c55e', // green-500
+                    'cripto': '#eab308', // yellow-500
+                    'imovel': '#ef4444', // red-500
+                    'outros': '#9ca3af' // gray-400
+                };
+                return map[type] || '#9ca3af';
+            });
+
+            charts.allocation = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors,
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                color: document.documentElement.classList.contains('dark') ? '#9ca3af' : '#4b5563',
+                                font: {
+                                    family: "'Inter', sans-serif",
+                                    size: 12
+                                },
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const percentage = (value / totalValue * 100).toFixed(1) + '%';
+                                    return ` ${context.label}: ${formatCurrency(value)} (${percentage})`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
         }
 
         function updateRecentTransactions() {
