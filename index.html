@@ -3507,6 +3507,23 @@
                 const isCompleted = goal.current >= goal.target;
                 const isOverdue = daysLeft < 0;
                 
+                // Monthly deposit calculation
+                const remaining = Math.max(0, goal.target - goal.current);
+                let monthlyDepositHtml = '';
+                
+                if (!isCompleted && !isOverdue && remaining > 0) {
+                    // Use a minimum of 1 month to avoid division by zero or huge numbers for short periods
+                    const months = Math.max(1, daysLeft / 30); 
+                    const monthlyValue = remaining / months;
+                    
+                    monthlyDepositHtml = `
+                        <p class="text-sm font-medium text-primary dark:text-primary-light mb-1">
+                            <i class="fas fa-coins mr-1"></i>
+                            Aporte sugerido: <strong>${formatCurrency(monthlyValue)}</strong>/mês
+                        </p>
+                    `;
+                }
+                
                 return `
                     <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-2xl hover:scale-105">
                         <div class="flex justify-between items-start mb-4">
@@ -3552,6 +3569,7 @@
                         </div>
                         
                         <div class="mb-4 text-center">
+                            ${monthlyDepositHtml}
                             <p class="text-sm ${isOverdue ? 'text-danger' : 'text-gray-600 dark:text-gray-400'}">
                                 <i class="fas fa-calendar mr-1"></i>
                                 ${isOverdue ? `Atrasada há ${Math.abs(daysLeft)} dias` : 
