@@ -655,7 +655,7 @@
                         </div>
                     </div>
                 </div>
-                <div id="transactionsList" class="divide-y divide-gray-200 dark:divide-gray-700 max-h-96 overflow-y-auto">
+                <div id="transactionsList" class="divide-y divide-gray-200 dark:divide-gray-700">
                     <!-- Transactions will be rendered here -->
                 </div>
             </div>
@@ -2321,8 +2321,14 @@
         }
 
         function setupDefaultDates() {
-            const today = new Date().toISOString().split('T')[0];
-            const currentMonth = new Date().toISOString().slice(0, 7);
+            // Use local time for today
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            
+            const today = `${year}-${month}-${day}`;
+            const currentMonth = `${year}-${month}`;
             
             document.getElementById('transactionDate').value = today;
             document.getElementById('investmentDate').value = today;
