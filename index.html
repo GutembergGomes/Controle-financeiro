@@ -2846,10 +2846,12 @@
 
         function deleteInvestment(id) {
             if (confirm('Tem certeza que deseja excluir este investimento?')) {
+                // Find and remove linked transaction first
+                appData.transactions = appData.transactions.filter(t => t.linkedInvestmentId !== id);
+
                 appData.investments = appData.investments.filter(i => i.id !== id);
                 saveData();
-                updateInvestmentOverview();
-                renderInvestments();
+                updateAllDisplays();
                 showNotification('Investimento removido com sucesso!', 'success');
             }
         }
@@ -2942,6 +2944,10 @@
                 }
             });
             
+            // Add investment values to total balance
+            const totalInvestments = appData.investments.reduce((sum, inv) => sum + inv.currentValue, 0);
+            totalBalance += totalInvestments;
+            
             let monthlySavings = monthlyIncome - monthlyExpenses;
             
             // Se não houver renda, não mostrar economia negativa
@@ -2954,6 +2960,9 @@
             const expenseChange = lastMonthExpenses > 0 ? ((monthlyExpenses - lastMonthExpenses) / lastMonthExpenses * 100) : 0;
 
             document.getElementById('totalBalance').textContent = formatCurrency(totalBalance);
+            if (document.getElementById('totalInvestmentsDash')) {
+                document.getElementById('totalInvestmentsDash').textContent = formatCurrency(totalInvestments);
+            }
             document.getElementById('monthlyIncome').textContent = formatCurrency(monthlyIncome);
             document.getElementById('monthlyExpensesDash').textContent = formatCurrency(monthlyExpenses);
             document.getElementById('monthlySavingsDash').textContent = formatCurrency(monthlySavings);
