@@ -989,6 +989,10 @@
                             <input type="text" id="compoundPrincipal" oninput="formatCurrencyInput(this)" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="1.000,00">
                         </div>
                         <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Aporte Mensal (R$)</label>
+                            <input type="text" id="compoundMonthlyContribution" oninput="formatCurrencyInput(this)" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="200,00">
+                        </div>
+                        <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Taxa de Juros (% ao ano)</label>
                             <input type="number" id="compoundRate" step="0.01" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 text-gray-900 dark:text-white text-base focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="12">
                         </div>
@@ -4349,16 +4353,32 @@
         // FUNÇÕES DE FERRAMENTAS
         function calculateCompoundInterest() {
             const principal = parseCurrencyInput(document.getElementById('compoundPrincipal').value) || 0;
-            const rate = parseFloat(document.getElementById('compoundRate').value) || 0;
-            const time = parseFloat(document.getElementById('compoundTime').value) || 0;
+            const monthlyContribution = parseCurrencyInput(document.getElementById('compoundMonthlyContribution').value) || 0;
+            const rateYearly = parseFloat(document.getElementById('compoundRate').value) || 0;
+            const years = parseFloat(document.getElementById('compoundTime').value) || 0;
 
-            if (principal <= 0 || rate <= 0 || time <= 0) {
-                showNotification('Preencha todos os campos com valores válidos!', 'error');
+            if (years <= 0 || (principal <= 0 && monthlyContribution <= 0)) {
+                showNotification('Preencha os campos com valores válidos!', 'error');
                 return;
             }
 
-            const finalValue = principal * Math.pow(1 + (rate / 100), time);
-            const earnings = finalValue - principal;
+            // Cálculo com aportes mensais e juros compostos
+            const rateMonthly = rateYearly / 100 / 12;
+            const months = years * 12;
+            
+            let finalValue;
+            let totalInvested = principal + (monthlyContribution * months);
+
+            if (rateYearly === 0) {
+                finalValue = totalInvested;
+            } else {
+                // Valor Futuro = Principal * (1 + r)^n + PMT * [((1 + r)^n - 1) / r]
+                const fvPrincipal = principal * Math.pow(1 + rateMonthly, months);
+                const fvContributions = monthlyContribution * (Math.pow(1 + rateMonthly, months) - 1) / rateMonthly;
+                finalValue = fvPrincipal + fvContributions;
+            }
+
+            const earnings = finalValue - totalInvested;
 
             document.getElementById('compoundResult').classList.remove('hidden');
             document.getElementById('compoundFinalValue').textContent = formatCurrency(finalValue);
