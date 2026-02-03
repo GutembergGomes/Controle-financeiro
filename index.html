@@ -1131,6 +1131,9 @@
                 <button onclick="openGoalModal(); toggleFAB()" class="w-12 h-12 bg-warning text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 flex items-center justify-center" title="Nova Meta">
                     <i class="fas fa-target"></i>
                 </button>
+                <button onclick="openInvestmentModal(); toggleFAB()" class="w-12 h-12 bg-blue-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 flex items-center justify-center" title="Novo Investimento">
+                    <i class="fas fa-chart-line"></i>
+                </button>
             </div>
         </div>
     </div>
@@ -2809,13 +2812,36 @@
                 date: date
             };
 
+            // Automatically create an expense transaction for the investment
+            const transaction = {
+                id: Date.now() + 1, // Ensure unique ID
+                description: `Aporte: ${name}`,
+                amount: amount,
+                type: 'expense',
+                category: 'Investimentos',
+                date: date,
+                status: 'paid', // Investments are usually paid immediately
+                linkedInvestmentId: investment.id
+            };
+
             appData.investments.push(investment);
+            appData.transactions.push(transaction);
+
             saveData();
             updateInvestmentOverview();
             renderInvestments();
+            
+            // Update all displays to reflect the new transaction/expense
+            if (typeof updateAllDisplays === 'function') {
+                updateAllDisplays();
+            } else {
+                updateDashboard();
+                renderTransactions();
+            }
+
             closeInvestmentModal();
             
-            showNotification('Investimento adicionado com sucesso!', 'success');
+            showNotification('Investimento adicionado e descontado do saldo!', 'success');
         }
 
         function deleteInvestment(id) {
