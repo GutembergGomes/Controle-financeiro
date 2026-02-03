@@ -2509,7 +2509,12 @@
         function closeTransactionModal() {
             document.getElementById('transactionModal').classList.add('hidden');
             document.getElementById('transactionForm').reset();
-            document.getElementById('transactionDate').value = new Date().toISOString().split('T')[0];
+            
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            document.getElementById('transactionDate').value = `${year}-${month}-${day}`;
         }
 
         function openGoalModal() {
@@ -2531,7 +2536,12 @@
         function closeBudgetModal() {
             document.getElementById('budgetModal').classList.add('hidden');
             document.getElementById('budgetForm').reset();
-            document.getElementById('budgetMonth').value = new Date().toISOString().slice(0, 7);
+            
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const currentMonth = `${year}-${month}`;
+            document.getElementById('budgetMonth').value = currentMonth;
         }
 
         function openInvestmentModal() {
@@ -2542,7 +2552,12 @@
         function closeInvestmentModal() {
             document.getElementById('investmentModal').classList.add('hidden');
             document.getElementById('investmentForm').reset();
-            document.getElementById('investmentDate').value = new Date().toISOString().split('T')[0];
+            
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            document.getElementById('investmentDate').value = `${year}-${month}-${day}`;
         }
 
         function showSettingsModal() {
@@ -2907,8 +2922,15 @@
         }
 
         function updateDashboard() {
-            const currentMonth = new Date().toISOString().slice(0, 7);
-            const lastMonth = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 7);
+            // Use local time for current month to avoid timezone issues
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const currentMonth = `${year}-${month}`;
+            
+            // Calculate last month correctly
+            const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            const lastMonth = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, '0')}`;
             
             const monthlyIncome = appData.transactions
                 .filter(t => t.type === 'income' && t.date.startsWith(currentMonth) && t.status !== 'pending')
@@ -3061,7 +3083,10 @@
         }
 
         function updateBudgetOverview() {
-            const currentMonth = new Date().toISOString().slice(0, 7);
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const currentMonth = `${year}-${month}`;
             
             const totalBudget = appData.budgets
                 .filter(b => b.month === currentMonth)
@@ -3192,7 +3217,10 @@
 
         function renderBudgetCategories() {
             const container = document.getElementById('budgetCategories');
-            const currentMonth = new Date().toISOString().slice(0, 7);
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const currentMonth = `${year}-${month}`;
             
             const currentBudgets = appData.budgets.filter(b => b.month === currentMonth);
             
