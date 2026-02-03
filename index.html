@@ -322,6 +322,12 @@
             <button onclick="showSection('tools'); toggleMobileMenu()" class="block w-full text-left py-3 px-4 text-white hover:bg-white/20 rounded-lg transition-colors">
                 <i class="fas fa-tools mr-3"></i>Ferramentas
             </button>
+            
+            <div class="border-t border-white/10 pt-2 mt-2">
+                <button id="mobileAuthBtn" onclick="loginWithGoogle()" class="block w-full text-left py-3 px-4 text-white hover:bg-white/20 rounded-lg transition-colors">
+                    <i class="fab fa-google mr-3"></i>Entrar
+                </button>
+            </div>
         </div>
     </div>
 
@@ -2211,6 +2217,7 @@
 
         function updateAuthUI() {
             const authBtn = document.getElementById('authBtn');
+            const mobileAuthBtn = document.getElementById('mobileAuthBtn');
             const userDisplay = document.getElementById('userDisplay');
             
             if (currentUser) {
@@ -2220,6 +2227,13 @@
                     authBtn.classList.add('bg-red-500/20', 'text-red-100', 'border-red-500/30');
                     authBtn.classList.remove('bg-white/10');
                 }
+                
+                if(mobileAuthBtn) {
+                    mobileAuthBtn.innerHTML = '<i class="fas fa-sign-out-alt mr-3"></i>Sair';
+                    mobileAuthBtn.onclick = () => { toggleMobileMenu(); logout(); };
+                    mobileAuthBtn.classList.add('text-red-300');
+                }
+
                 if(userDisplay) {
                     userDisplay.innerHTML = `
                         <div class="flex items-center gap-2 mr-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/10">
@@ -2236,6 +2250,13 @@
                     authBtn.classList.remove('bg-red-500/20', 'text-red-100', 'border-red-500/30');
                     authBtn.classList.add('bg-white/10');
                 }
+                
+                if(mobileAuthBtn) {
+                    mobileAuthBtn.innerHTML = '<i class="fab fa-google mr-3"></i>Entrar';
+                    mobileAuthBtn.onclick = () => { toggleMobileMenu(); loginWithGoogle(); };
+                    mobileAuthBtn.classList.remove('text-red-300');
+                }
+
                 if(userDisplay) userDisplay.classList.add('hidden');
             }
         }
@@ -2419,7 +2440,6 @@
                     setTimeout(() => updateCharts(), 100);
                     break;
                 case 'transactions':
-                    updateTransactionStats();
                     renderTransactions();
                     break;
                 case 'budget':
@@ -2897,7 +2917,6 @@
         // FUNÇÕES DE ATUALIZAÇÃO DE DADOS
         function updateAllDisplays() {
             updateDashboard();
-            updateTransactionStats();
             updateBudgetOverview();
             updateGoalsStats();
             updateInvestmentOverview();
@@ -3072,10 +3091,10 @@
             suggestionEl.classList.remove('hidden');
         }
 
-        function updateTransactionStats() {
-            const totalTransactions = appData.transactions.length;
-            const maxIncome = Math.max(...appData.transactions.filter(t => t.type === 'income' && t.status !== 'pending').map(t => t.amount), 0);
-            const maxExpense = Math.max(...appData.transactions.filter(t => t.type === 'expense' && t.status !== 'pending').map(t => t.amount), 0);
+        function updateTransactionStats(transactions = appData.transactions) {
+            const totalTransactions = transactions.length;
+            const maxIncome = Math.max(...transactions.filter(t => t.type === 'income' && t.status !== 'pending').map(t => t.amount), 0);
+            const maxExpense = Math.max(...transactions.filter(t => t.type === 'expense' && t.status !== 'pending').map(t => t.amount), 0);
 
             document.getElementById('totalTransactions').textContent = totalTransactions;
             document.getElementById('maxIncome').textContent = formatCurrency(maxIncome);
@@ -3160,6 +3179,9 @@
             }
 
             filteredTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            // Update stats based on filtered view
+            updateTransactionStats(filteredTransactions);
 
             countElement.textContent = `${filteredTransactions.length} transação${filteredTransactions.length !== 1 ? 'ões' : ''}`;
 
